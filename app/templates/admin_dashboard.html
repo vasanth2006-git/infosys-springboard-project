@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - ShopSense{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="brand-logo">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span class="brand-name">ShopSense</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#dashboard" class="nav-item active" id="navDashboard" data-tab="dashboard">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#vendor-management" class="nav-item" id="navVendorMgmt" data-tab="vendor-mgmt">
+                <i class="fa-solid fa-users-gear"></i>
+                <span>Vendor Management</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/login" class="nav-item logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Sign Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+        <!-- Toast Notification Alert -->
+        <div id="toastNotification" class="toast hidden">
+            <i class="fa-solid fa-circle-check toast-icon"></i>
+            <span id="toastMessage">Action performed successfully.</span>
+        </div>
+
+        <!-- ==========================
+             DASHBOARD TAB
+             ========================== -->
+        <section id="dashboardTab" class="tab-content active">
+            <div class="content-header">
+                <h1 class="page-title">Admin Dashboard</h1>
+                <p class="page-subtitle">Marketplace Vendor Status & Platform Metrics</p>
+            </div>
+
+            <!-- SUMMARY CARDS -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon icon-total">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Vendors</span>
+                        <h2 class="stat-value" id="totalVendorsCount">0</h2>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon icon-pending">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Pending Approval</span>
+                        <h2 class="stat-value" id="pendingVendorsCount">0</h2>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon icon-approved">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Approved Vendors</span>
+                        <h2 class="stat-value" id="approvedVendorsCount">0</h2>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon icon-suspended">
+                        <i class="fa-solid fa-user-slash"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Suspended Vendors</span>
+                        <h2 class="stat-value" id="suspendedVendorsCount">0</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RECENT VENDORS SECTION -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Vendors</h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Vendor Name</th>
+                                <th>Business Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Joined Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentVendorsTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">Loading vendor metrics...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================
+             VENDOR MANAGEMENT TAB
+             ========================== -->
+        <section id="vendorMgmtTab" class="tab-content hidden">
+            <div class="content-header">
+                <h1 class="page-title">Vendor Management</h1>
+                <p class="page-subtitle">Review, approve or suspend vendor accounts.</p>
+            </div>
+
+            <!-- CONTROLS: SEARCH BAR & STATUS FILTER -->
+            <div class="filter-toolbar">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input 
+                        type="text" 
+                        id="vendorSearchInput" 
+                        class="search-input" 
+                        placeholder="Search vendor name, business name, or email"
+                    >
+                </div>
+                <div class="filter-box">
+                    <label for="statusFilterSelect" class="filter-label">Filter Status:</label>
+                    <select id="statusFilterSelect" class="filter-select">
+                        <option value="All">All</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Suspended">Suspended</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- VENDOR MANAGEMENT TABLE -->
+            <div class="section-card">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Vendor Name</th>
+                                <th>Business Name</th>
+                                <th>Email Address</th>
+                                <th>Status</th>
+                                <th>Joined Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vendorMgmtTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">Loading vendor details...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- ==========================
+     CONFIRMATION MODAL DIALOG
+     ========================== -->
+<div id="confirmationModal" class="modal-overlay hidden">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle">Confirm Action</h3>
+            <button type="button" class="modal-close" id="modalCloseBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p id="modalMessage">Are you sure you want to proceed?</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" id="modalCancelBtn">Cancel</button>
+            <button type="button" class="btn btn-primary" id="modalConfirmBtn">Confirm</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

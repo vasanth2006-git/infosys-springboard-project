@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Registration - ShopSense{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <!-- Registration Form View -->
+    <div class="auth-card" id="registrationCard">
+        <!-- Logo & Title Header -->
+        <div class="auth-header text-center">
+            <div class="brand-logo">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span class="brand-name">ShopSense</span>
+            </div>
+            <h1 class="auth-title">Register as a Vendor</h1>
+            <p class="auth-subtitle">Fill in your details to apply for a vendor account.</p>
+        </div>
+
+        <!-- Alert Box -->
+        <div id="regAlertBox" class="alert alert-danger hidden" role="alert">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="regAlertMessage"></span>
+        </div>
+
+        <!-- Registration Form -->
+        <form id="registerForm" class="auth-form" novalidate>
+            <!-- Full Name -->
+            <div class="form-group">
+                <label for="fullName" class="form-label">Full Name <span class="required-star">*</span></label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-regular fa-user field-icon"></i>
+                    <input type="text" id="fullName" name="full_name" class="form-input" placeholder="John Doe" required>
+                </div>
+            </div>
+
+            <!-- Business Name -->
+            <div class="form-group">
+                <label for="businessName" class="form-label">Business Name <span class="required-star">*</span></label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-solid fa-briefcase field-icon"></i>
+                    <input type="text" id="businessName" name="business_name" class="form-input" placeholder="Acme Enterprises" required>
+                </div>
+            </div>
+
+            <!-- Email Address -->
+            <div class="form-group">
+                <label for="regEmail" class="form-label">Email Address <span class="required-star">*</span></label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-regular fa-envelope field-icon"></i>
+                    <input type="email" id="regEmail" name="email" class="form-input" placeholder="vendor@example.com" required>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label for="regPassword" class="form-label">Password <span class="required-star">*</span></label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-solid fa-lock field-icon"></i>
+                    <input type="password" id="regPassword" name="password" class="form-input" placeholder="Minimum 6 characters" minlength="6" required>
+                    <button type="button" class="password-toggle-btn" id="regPasswordToggle" aria-label="Toggle password visibility">
+                        <i class="fa-regular fa-eye" id="regEyeIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Phone Number (Optional) -->
+            <div class="form-group">
+                <label for="phone" class="form-label">Phone Number <span class="optional-tag">(Optional)</span></label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-solid fa-phone field-icon"></i>
+                    <input type="tel" id="phone" name="phone" class="form-input" placeholder="+1 (555) 000-0000">
+                </div>
+            </div>
+
+            <!-- Business Address (Optional) -->
+            <div class="form-group">
+                <label for="address" class="form-label">Business Address <span class="optional-tag">(Optional)</span></label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-solid fa-location-dot field-icon"></i>
+                    <input type="text" id="address" name="address" class="form-input" placeholder="123 Commerce St, Tech City">
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary btn-block" id="submitRegisterBtn">
+                <span>Submit Registration</span>
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
+
+        <div class="auth-footer text-center">
+            <p>Already have an account? <a href="/login" class="auth-link">Sign in here</a></p>
+        </div>
+    </div>
+
+    <!-- Post-Registration Confirmation Card (Hidden by Default) -->
+    <div class="auth-card hidden" id="confirmationCard">
+        <div class="confirmation-icon-wrapper">
+            <i class="fa-solid fa-circle-check confirmation-icon"></i>
+        </div>
+        <div class="auth-header text-center">
+            <h1 class="auth-title">Registration Submitted</h1>
+            <p class="confirmation-message">
+                Your vendor account has been created and is currently waiting for admin approval. You will be able to log in once your account is approved.
+            </p>
+        </div>
+        <div class="form-group text-center">
+            <a href="/login" class="btn btn-secondary btn-block">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Back to Login</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - ShopSense{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <!-- Logo & Title Header -->
+        <div class="auth-header text-center">
+            <div class="brand-logo">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span class="brand-name">ShopSense</span>
+            </div>
+            <h1 class="auth-title">Sign in to your account</h1>
+            <p class="auth-subtitle">Choose your role</p>
+        </div>
+
+        <!-- Role Selector Buttons -->
+        <div class="role-selector" id="roleSelector">
+            <button type="button" class="role-btn active" data-role="vendor" id="vendorRoleBtn">
+                <i class="fa-solid fa-store"></i>
+                <span>Vendor Login</span>
+            </button>
+            <button type="button" class="role-btn" data-role="admin" id="adminRoleBtn">
+                <i class="fa-solid fa-user-shield"></i>
+                <span>Admin Login</span>
+            </button>
+        </div>
+
+        <!-- Alert Notification Box -->
+        <div id="alertBox" class="alert alert-danger hidden" role="alert">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="alertMessage"></span>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="auth-form" novalidate>
+            <input type="hidden" id="selectedRole" name="role" value="vendor">
+
+            <!-- Email Input -->
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-regular fa-envelope field-icon"></i>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form-input" 
+                        placeholder="email@example.com" 
+                        required
+                    >
+                </div>
+            </div>
+
+            <!-- Password Input -->
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-solid fa-lock field-icon"></i>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="Enter password (min 6 chars)" 
+                        minlength="6" 
+                        required
+                    >
+                    <button type="button" class="password-toggle-btn" id="passwordToggle" aria-label="Toggle password visibility">
+                        <i class="fa-regular fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic Submit Button -->
+            <button type="submit" class="btn btn-primary btn-block" id="submitLoginBtn">
+                <span>Sign in as Vendor</span>
+                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+            </button>
+        </form>
+
+        <!-- Footer Link -->
+        <div class="auth-footer text-center">
+            <p>New Vendor? <a href="/register" class="auth-link">Register here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

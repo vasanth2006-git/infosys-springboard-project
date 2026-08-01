@@ -1,0 +1,632 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Portal - ShopSense{% endblock %}
+
+{% block content %}
+<div class="vendor-layout">
+    <!-- Left Sidebar -->
+    <aside class="vendor-sidebar">
+        <!-- Logo & Header -->
+        <div class="sidebar-header">
+            <div class="brand-logo">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span class="brand-name">ShopSense</span>
+            </div>
+            <span class="sidebar-subtitle">Vendor Portal</span>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="sidebar-nav">
+            <a href="#dashboard" id="navDashboard" class="sidebar-link active" data-view="dashboard">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#catalog" id="navCatalog" class="sidebar-link" data-view="catalog">
+                <i class="fa-solid fa-box-archive"></i>
+                <span>My Catalog</span>
+            </a>
+            <a href="#add-product" id="navAddProduct" class="sidebar-link" data-view="add-product">
+                <i class="fa-solid fa-square-plus"></i>
+                <span>Add Product</span>
+            </a>
+            <a href="#insights" id="navInsights" class="sidebar-link" data-view="insights">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>Insights</span>
+            </a>
+            <a href="#profile" id="navProfile" class="sidebar-link" data-view="profile">
+                <i class="fa-solid fa-user-gear"></i>
+                <span>Profile</span>
+            </a>
+        </nav>
+
+        <!-- Sidebar Footer / Logout -->
+        <div class="sidebar-footer">
+            <div class="vendor-info-badge">
+                <i class="fa-solid fa-store"></i>
+                <div class="vendor-text">
+                    <strong id="sidebarVendorName">Vendor Account</strong>
+                    <span id="sidebarBusinessName" class="badge-status">Approved</span>
+                </div>
+            </div>
+            <button id="vendorLogoutBtn" class="btn-logout" title="Sign Out">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="vendor-main">
+
+        <!-- Notification Toast -->
+        <div id="vendorToast" class="toast notification hidden" role="alert">
+            <i class="fa-solid fa-circle-check" id="toastIcon"></i>
+            <span id="vendorToastMsg"></span>
+        </div>
+
+        <!-- VIEW 1: DASHBOARD (DEFAULT) -->
+        <section id="viewDashboard" class="vendor-view active">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Vendor Dashboard</h1>
+                    <p class="welcome-text">Welcome, <span id="vendorWelcomeName">Vendor</span></p>
+                </div>
+                <button class="btn btn-primary" onclick="switchToView('add-product')">
+                    <i class="fa-solid fa-plus"></i> Add New Product
+                </button>
+            </div>
+
+            <!-- Summary Cards (4 Cards) -->
+            <div class="summary-cards-grid">
+                <!-- 1. Total Sales -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-blue">
+                        <i class="fa-solid fa-chart-column"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total Sales</span>
+                        <h3 class="stat-value" id="cardTotalSales">0</h3>
+                        <span class="stat-subtext"><i class="fa-solid fa-arrow-trend-up"></i> Items sold</span>
+                    </div>
+                </div>
+
+                <!-- 2. Total Revenue -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-green">
+                        <i class="fa-solid fa-sack-dollar"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total Revenue</span>
+                        <h3 class="stat-value" id="cardTotalRevenue">$0.00</h3>
+                        <span class="stat-subtext"><i class="fa-solid fa-circle-dollar-to-slot"></i> Gross earnings</span>
+                    </div>
+                </div>
+
+                <!-- 3. Total Transactions -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-purple">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total Transactions</span>
+                        <h3 class="stat-value" id="cardTotalTransactions">0</h3>
+                        <span class="stat-subtext"><i class="fa-solid fa-check-double"></i> Orders processed</span>
+                    </div>
+                </div>
+
+                <!-- 4. Published Products -->
+                <div class="stat-card">
+                    <div class="stat-icon icon-orange">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Published Products</span>
+                        <h3 class="stat-value" id="cardPublishedProducts">0</h3>
+                        <span class="stat-subtext"><i class="fa-solid fa-eye"></i> Active items</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Products Section -->
+            <div class="content-card mt-4">
+                <div class="card-header">
+                    <h2 class="card-title">Recent Products</h2>
+                </div>
+
+                <!-- Table Container -->
+                <div id="recentProductsContainer" class="table-responsive">
+                    <table class="table vendor-products-table" id="recentProductsTable">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentProductsTbody">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyProductsState" class="empty-state-box hidden">
+                    <div class="empty-icon">
+                        <i class="fa-solid fa-box-open"></i>
+                    </div>
+                    <p class="empty-message">No products available.</p>
+                    <button class="btn btn-primary" id="btnEmptyAddProduct" onclick="switchToView('add-product')">
+                        <i class="fa-solid fa-plus"></i> Add Product
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- VIEW 2: MY CATALOG -->
+        <section id="viewCatalog" class="vendor-view hidden">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">My  Profuct Catalog</h1>
+                    <p class="page-subtitle">Manage, edit, and organize all your store items.</p>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <!-- Search & Filters -->
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="catalogSearchInput" class="form-input" placeholder="Search products by name or category...">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table vendor-products-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fullCatalogTbody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- VIEW 3: ADD PRODUCT -->
+        <section id="viewAddProduct" class="vendor-view hidden">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title" id="productFormTitle">Add New Product</h1>
+                    <p class="page-subtitle">Fill in the details below to add a product to your ShopSense store.</p>
+                </div>
+            </div>
+
+            <div class="content-card form-card">
+                <form id="productForm" novalidate>
+                    <input type="hidden" id="editProductId" value="">
+
+                    <!-- Two-column layout: Left = Name + Price | Right = Category + Stock -->
+                    <div class="form-grid-2col">
+                        <!-- Left Column -->
+                        <div class="form-col">
+                            <!-- Product Name -->
+                            <div class="form-group">
+                                <label for="productName" class="form-label">Product Name <span class="req">*</span></label>
+                                <input type="text" id="productName" class="form-input" placeholder="e.g. Wireless Noise-Canceling Headphones" required>
+                            </div>
+                            <!-- Price -->
+                            <div class="form-group">
+                                <label for="productPrice" class="form-label">Price ($) <span class="req">*</span></label>
+                                <input type="number" id="productPrice" class="form-input" placeholder="0.00" step="0.01" min="0" required>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="form-col">
+                            <!-- Category -->
+                            <div class="form-group">
+                                <label for="productCategory" class="form-label">Category <span class="req">*</span></label>
+                                <input type="text" id="productCategory" class="form-input" placeholder="e.g. Electronics, Fashion, Sports..." required>
+                            </div>
+                            <!-- Stock Quantity -->
+                            <div class="form-group">
+                                <label for="productStock" class="form-label">Stock Quantity <span class="req">*</span></label>
+                                <input type="number" id="productStock" class="form-input" placeholder="0" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Image URL (full-width) -->
+                    <div class="form-group mt-3">
+                        <label for="productImageUrl" class="form-label">Product Image URL</label>
+                        <input type="url" id="productImageUrl" class="form-input" placeholder="https://images.unsplash.com/photo-...">
+                        <small class="form-hint">Paste a direct image web link or leave blank for auto-generated placeholder.</small>
+                    </div>
+
+                    <!-- Description (AI will enhance this) -->
+                    <div class="form-group mt-3">
+                        <label for="productDescription" class="form-label">Description <span class="form-label-hint">(AI will enhance this)</span></label>
+                        <textarea id="productDescription" class="form-input text-area" rows="4" placeholder="Enter a brief product description..."></textarea>
+                    </div>
+
+                    <!-- Form Buttons -->
+                    <div class="form-actions mt-4">
+                        <button type="button" id="btnGenerateAiDesc" class="btn btn-secondary">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate AI Description
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="btnSubmitProduct">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Product
+                        </button>
+                        <button type="button" class="btn btn-outline" onclick="switchToView('catalog')">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+
+        <!-- VIEW 4: INSIGHTS -->
+        <section id="viewInsights" class="vendor-view hidden">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Store Insights &amp; Analytics</h1>
+                    <p class="page-subtitle">Track your top products, sales trends, and order activity.</p>
+                </div>
+            </div>
+
+            <!-- ── SECTION 1: Customer Order Statistics ── -->
+            <div class="insights-order-stats">
+                <div class="order-stat-card">
+                    <div class="order-stat-icon icon-blue">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                    </div>
+                    <div class="order-stat-body">
+                        <span class="order-stat-label">Total Orders</span>
+                        <span class="order-stat-value" id="insightTotalOrders">248</span>
+                    </div>
+                </div>
+                <div class="order-stat-card">
+                    <div class="order-stat-icon icon-green">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="order-stat-body">
+                        <span class="order-stat-label">Completed Orders</span>
+                        <span class="order-stat-value" id="insightCompletedOrders">184</span>
+                    </div>
+                </div>
+                <div class="order-stat-card">
+                    <div class="order-stat-icon icon-orange">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div class="order-stat-body">
+                        <span class="order-stat-label">Pending Orders</span>
+                        <span class="order-stat-value" id="insightPendingOrders">43</span>
+                    </div>
+                </div>
+                <div class="order-stat-card">
+                    <div class="order-stat-icon icon-red">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                    <div class="order-stat-body">
+                        <span class="order-stat-label">Cancelled Orders</span>
+                        <span class="order-stat-value" id="insightCancelledOrders">21</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── SECTION 2: Sales Trends Chart ── -->
+            <div class="content-card mt-4">
+                <div class="insights-card-header">
+                    <div>
+                        <h2 class="card-title">Sales Trends</h2>
+                        <p class="card-subtitle">Revenue overview across time periods</p>
+                    </div>
+                    <div class="trend-tab-group" id="salesTrendTabs">
+                        <button class="trend-tab active" data-period="daily">Daily</button>
+                        <button class="trend-tab" data-period="weekly">Weekly</button>
+                        <button class="trend-tab" data-period="monthly">Monthly</button>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="salesTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- ── SECTION 3: Best Selling Products ── -->
+            <div class="content-card mt-4">
+                <div class="insights-card-header">
+                    <div>
+                        <h2 class="card-title">Best Selling Products</h2>
+                        <p class="card-subtitle">Your top-performing products by units sold</p>
+                    </div>
+                    <span class="insights-placeholder-badge">
+                        <i class="fa-solid fa-database"></i> Placeholder Data
+                    </span>
+                </div>
+                <div class="best-sellers-list">
+                    <div class="best-seller-row">
+                        <span class="bs-rank rank-gold">1</span>
+                        <div class="bs-info">
+                            <span class="bs-name">Wireless Noise-Canceling Headphones</span>
+                            <span class="bs-category">Electronics</span>
+                        </div>
+                        <div class="bs-stats">
+                            <span class="bs-units">142 sold</span>
+                            <span class="bs-revenue">$12,780</span>
+                        </div>
+                        <div class="bs-bar-wrap">
+                            <div class="bs-bar" style="width: 100%; background: linear-gradient(90deg, #6366f1, #818cf8);"></div>
+                        </div>
+                    </div>
+                    <div class="best-seller-row">
+                        <span class="bs-rank rank-silver">2</span>
+                        <div class="bs-info">
+                            <span class="bs-name">Ergonomic Laptop Stand</span>
+                            <span class="bs-category">Home &amp; Living</span>
+                        </div>
+                        <div class="bs-stats">
+                            <span class="bs-units">98 sold</span>
+                            <span class="bs-revenue">$4,900</span>
+                        </div>
+                        <div class="bs-bar-wrap">
+                            <div class="bs-bar" style="width: 69%; background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+                        </div>
+                    </div>
+                    <div class="best-seller-row">
+                        <span class="bs-rank rank-bronze">3</span>
+                        <div class="bs-info">
+                            <span class="bs-name">Premium Yoga Mat Pro</span>
+                            <span class="bs-category">Sports &amp; Fitness</span>
+                        </div>
+                        <div class="bs-stats">
+                            <span class="bs-units">76 sold</span>
+                            <span class="bs-revenue">$3,040</span>
+                        </div>
+                        <div class="bs-bar-wrap">
+                            <div class="bs-bar" style="width: 54%; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+                        </div>
+                    </div>
+                    <div class="best-seller-row">
+                        <span class="bs-rank">4</span>
+                        <div class="bs-info">
+                            <span class="bs-name">Smart LED Desk Lamp</span>
+                            <span class="bs-category">Electronics</span>
+                        </div>
+                        <div class="bs-stats">
+                            <span class="bs-units">64 sold</span>
+                            <span class="bs-revenue">$2,560</span>
+                        </div>
+                        <div class="bs-bar-wrap">
+                            <div class="bs-bar" style="width: 45%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+                        </div>
+                    </div>
+                    <div class="best-seller-row">
+                        <span class="bs-rank">5</span>
+                        <div class="bs-info">
+                            <span class="bs-name">Minimalist Canvas Backpack</span>
+                            <span class="bs-category">Fashion &amp; Apparel</span>
+                        </div>
+                        <div class="bs-stats">
+                            <span class="bs-units">51 sold</span>
+                            <span class="bs-revenue">$3,315</span>
+                        </div>
+                        <div class="bs-bar-wrap">
+                            <div class="bs-bar" style="width: 36%; background: linear-gradient(90deg, #a855f7, #c084fc);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- VIEW 5: PROFILE -->
+        <section id="viewProfile" class="vendor-view hidden">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Vendor Account Profile</h1>
+                    <p class="page-subtitle">Manage your business contact details and security.</p>
+                </div>
+            </div>
+
+            <div class="content-card form-card">
+                <form id="vendorProfileForm">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="profFullName" class="form-label">Full Name</label>
+                            <input type="text" id="profFullName" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profBusinessName" class="form-label">Business Name</label>
+                            <input type="text" id="profBusinessName" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profEmail" class="form-label">Email Address</label>
+                            <input type="email" id="profEmail" class="form-input" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="profPhone" class="form-label">Phone Number</label>
+                            <input type="text" id="profPhone" class="form-input">
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="profAddress" class="form-label">Business Address</label>
+                        <textarea id="profAddress" class="form-input text-area" rows="2"></textarea>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="profNewPassword" class="form-label">Change Password (optional)</label>
+                        <input type="password" id="profNewPassword" class="form-input" placeholder="Leave blank to keep current password">
+                    </div>
+
+                    <div class="form-actions mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-user-check"></i> Update Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- Product Detail View Modal -->
+<div id="productViewModal" class="modal-overlay hidden">
+    <div class="modal-card product-modal-card">
+        <div class="modal-header">
+            <h3 class="modal-title" id="viewModalTitle">Product Details</h3>
+            <button class="modal-close" id="viewModalCloseBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="product-view-body">
+                <img id="viewModalImg" src="" alt="Product Image" class="product-view-img">
+                <div class="product-view-details">
+                    <h4 id="viewModalName" class="view-product-name"></h4>
+                    <p class="view-product-meta">
+                        <span class="category-pill" id="viewModalCategory"></span>
+                        <span class="price-text ms-2" id="viewModalPrice"></span>
+                        <span class="stock-badge ms-2" id="viewModalStock"></span>
+                    </p>
+                    <div class="view-desc-box mt-3">
+                        <label class="form-label"><strong>AI-Generated Description:</strong></label>
+                        <p id="viewModalDesc" class="view-product-desc"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" id="viewModalCloseBtn2">Close</button>
+            <button class="btn btn-primary" id="viewModalEditBtn"><i class="fa-solid fa-pen-to-square"></i> Edit Product</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js for Sales Trends -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // ── Sales Trends Chart ──────────────────────────────────────────────────
+    const TREND_DATA = {
+        daily: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            data:   [1240, 980, 1560, 2100, 1875, 2460, 1320]
+        },
+        weekly: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            data:   [8400, 11200, 9800, 13600]
+        },
+        monthly: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+            data:   [22400, 18900, 31200, 27500, 34800, 29100, 38600]
+        }
+    };
+
+    let salesChart = null;
+
+    function buildChartConfig(period) {
+        const { labels, data } = TREND_DATA[period];
+        return {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Revenue ($)',
+                    data,
+                    fill: true,
+                    tension: 0.45,
+                    borderColor: '#6366f1',
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#6366f1',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    backgroundColor: (ctx) => {
+                        const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, ctx.chart.height);
+                        gradient.addColorStop(0, 'rgba(99,102,241,0.28)');
+                        gradient.addColorStop(1, 'rgba(99,102,241,0.0)');
+                        return gradient;
+                    }
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#131b2e',
+                        borderColor: 'rgba(99,102,241,0.4)',
+                        borderWidth: 1,
+                        titleColor: '#f8fafc',
+                        bodyColor: '#94a3b8',
+                        padding: 12,
+                        callbacks: {
+                            label: ctx => ' $' + ctx.parsed.y.toLocaleString()
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#64748b', font: { size: 12 } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: {
+                            color: '#64748b',
+                            font: { size: 12 },
+                            callback: val => '$' + val.toLocaleString()
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    function initSalesChart(period) {
+        period = period || 'daily';
+        const canvas = document.getElementById('salesTrendChart');
+        if (!canvas) return;
+        if (salesChart) { salesChart.destroy(); salesChart = null; }
+        salesChart = new Chart(canvas, buildChartConfig(period));
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabGroup = document.getElementById('salesTrendTabs');
+        if (tabGroup) {
+            tabGroup.addEventListener('click', function(e) {
+                const tab = e.target.closest('.trend-tab');
+                if (!tab) return;
+                tabGroup.querySelectorAll('.trend-tab').forEach(function(t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+                initSalesChart(tab.dataset.period);
+            });
+        }
+
+        // Initialize chart when Insights tab is clicked
+        const navInsightsLink = document.querySelector('[data-view="insights"]');
+        if (navInsightsLink) {
+            navInsightsLink.addEventListener('click', function() {
+                setTimeout(function() { initSalesChart('daily'); }, 60);
+            });
+        }
+    });
+</script>
+{% endblock %}
