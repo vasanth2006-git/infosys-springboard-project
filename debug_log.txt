@@ -1,0 +1,27 @@
+DATABASE STRUCTURE:
+
+Table DESCRIBE: vendors
+ - email: varchar(150) (Null=NO, Key=PRI, Default=None, Extra=)
+ - full_name: varchar(100) (Null=NO, Key=, Default=None, Extra=)
+ - business_name: varchar(100) (Null=NO, Key=, Default=None, Extra=)
+ - password_hash: varchar(255) (Null=NO, Key=, Default=None, Extra=)
+ - phone_number: varchar(20) (Null=YES, Key=, Default=None, Extra=)
+ - business_address: text (Null=YES, Key=, Default=None, Extra=)
+ - status: varchar(20) (Null=NO, Key=, Default=None, Extra=)
+
+Table DESCRIBE: products
+ - id: int (Null=NO, Key=PRI, Default=None, Extra=auto_increment)
+ - name: varchar(100) (Null=NO, Key=, Default=None, Extra=)
+ - description: text (Null=YES, Key=, Default=None, Extra=)
+ - category: varchar(50) (Null=NO, Key=, Default=None, Extra=)
+ - price: float (Null=NO, Key=, Default=None, Extra=)
+ - stock: int (Null=NO, Key=, Default=None, Extra=)
+ - image_url: text (Null=YES, Key=, Default=None, Extra=)
+ - vendor_email: varchar(150) (Null=NO, Key=MUL, Default=None, Extra=)
+
+Table DESCRIBE: transactions
+ - id: int (Null=NO, Key=PRI, Default=None, Extra=auto_increment)
+ - vendor_email: varchar(150) (Null=NO, Key=MUL, Default=None, Extra=)
+ - product_id: int (Null=YES, Key=MUL, Default=None, Extra=)
+ - amount: float (Null=NO, Key=, Default=None, Extra=)
+ - quantity: int (Null=NO, Key=, Default=None, Extra=)

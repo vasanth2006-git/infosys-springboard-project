@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}ShopSense - Registration Submitted{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container" style="max-width: 500px;">
+        <div class="success-card">
+            
+            <!-- Logo -->
+            <div class="logo-wrapper" style="margin-bottom: 2rem;">
+                <i class="fa-solid fa-bag-shopping logo-icon"></i>
+                <span class="logo-text">ShopSense</span>
+            </div>
+
+            <!-- Success Icon -->
+            <div class="success-icon-container">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+            <!-- Heading -->
+            <h1 class="auth-title">Registration Submitted</h1>
+
+            <!-- Message -->
+            <p class="success-message-text">
+                Your vendor account has been created and is currently waiting for admin approval. You will be able to log in once your account is approved.
+            </p>
+
+            <!-- Back to Login Button -->
+            <a href="/login" class="btn btn-primary">Back to Login</a>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

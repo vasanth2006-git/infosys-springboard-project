@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}ShopSense - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span>ShopSense</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <button class="nav-item active" data-tab="dashboard-view">
+                <i class="fa-solid fa-chart-pie"></i>
+                Dashboard
+            </button>
+            <button class="nav-item" data-tab="vendor-management-view">
+                <i class="fa-solid fa-users-gear"></i>
+                Vendor Management
+            </button>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="/logout" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Log Out
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboard-view" class="tab-content" style="display: block;">
+            <div class="content-header">
+                <h1 class="page-title">Admin Dashboard</h1>
+                <p class="page-subtitle">Marketplace Vendor Status & Platform Metrics</p>
+            </div>
+            
+            <!-- Summary Cards -->
+            <div class="metrics-grid">
+                <!-- Card 1: Total Vendors -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-total">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Total Vendors</span>
+                        <span class="metric-value">{{ stats.total }}</span>
+                    </div>
+                </div>
+                
+                <!-- Card 2: Pending Approval -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-pending">
+                        <i class="fa-solid fa-user-clock"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Pending Approval</span>
+                        <span class="metric-value">{{ stats.pending }}</span>
+                    </div>
+                </div>
+                
+                <!-- Card 3: Approved Vendors -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-approved">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Approved Vendors</span>
+                        <span class="metric-value">{{ stats.approved }}</span>
+                    </div>
+                </div>
+                
+                <!-- Card 4: Suspended Vendors -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-suspended">
+                        <i class="fa-solid fa-user-slash"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Suspended Vendors</span>
+                        <span class="metric-value">{{ stats.suspended }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Vendors Section -->
+            <div class="dashboard-section">
+                <div class="section-title-bar">Recent Vendors</div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Vendor Name</th>
+                                <th>Business Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_vendors %}
+                                {% for vendor in recent_vendors %}
+                                <tr>
+                                    <td><strong>{{ vendor.full_name }}</strong></td>
+                                    <td>{{ vendor.business_name }}</td>
+                                    <td>{{ vendor.email }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ vendor.status.lower() }}">{{ vendor.status }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                        No registered vendors yet.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VENDOR MANAGEMENT VIEW -->
+        <div id="vendor-management-view" class="tab-content" style="display: none;">
+            <div class="content-header">
+                <h1 class="page-title">Vendor Management</h1>
+                <p class="page-subtitle">Review, approve or suspend vendor accounts.</p>
+            </div>
+            
+            <!-- Controls: Search and Filter -->
+            <div class="controls-container">
+                <div class="search-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="vendorSearchInput" class="search-input" placeholder="Search vendor name, business name, or email">
+                </div>
+                
+                <div class="filter-wrapper">
+                    <label for="statusFilterSelect" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Status:</label>
+                    <select id="statusFilterSelect" class="filter-select">
+                        <option value="All">All</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Suspended">Suspended</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Vendor Table -->
+            <div class="dashboard-section" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+                <div class="table-responsive">
+                    <table class="data-table" id="vendorManagementTable">
+                        <thead>
+                            <tr>
+                                <th>Vendor Name</th>
+                                <th>Business Name</th>
+                                <th>Email Address</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if all_vendors %}
+                                {% for vendor in all_vendors %}
+                                <tr class="vendor-row" 
+                                    data-name="{{ vendor.full_name }}" 
+                                    data-business="{{ vendor.business_name }}" 
+                                    data-email="{{ vendor.email }}" 
+                                    data-status="{{ vendor.status }}">
+                                    
+                                    <td><strong>{{ vendor.full_name }}</strong></td>
+                                    <td>{{ vendor.business_name }}</td>
+                                    <td>{{ vendor.email }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ vendor.status.lower() }}">{{ vendor.status }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            {% if vendor.status == "Pending" %}
+                                                <button class="action-btn btn-approve" onclick="openApproveModal('{{ vendor.email }}', '{{ vendor.business_name | replace("'", "\\'") }}')">
+                                                    <i class="fa-solid fa-check"></i> Approve
+                                                </button>
+                                                <button class="action-btn btn-suspend" onclick="openSuspendModal('{{ vendor.email }}', '{{ vendor.business_name | replace("'", "\\'") }}')">
+                                                    <i class="fa-solid fa-ban"></i> Suspend
+                                                </button>
+                                            {% elif vendor.status == "Approved" %}
+                                                <button class="action-btn btn-suspend" onclick="openSuspendModal('{{ vendor.email }}', '{{ vendor.business_name | replace("'", "\\'") }}')">
+                                                    <i class="fa-solid fa-ban"></i> Suspend
+                                                </button>
+                                            {% elif vendor.status == "Suspended" %}
+                                                <button class="action-btn btn-approve" onclick="openApproveModal('{{ vendor.email }}', '{{ vendor.business_name | replace("'", "\\'") }}')">
+                                                    <i class="fa-solid fa-check"></i> Approve
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="no-vendors-row">
+                                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                        No registered vendors yet.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+    </main>
+</div>
+
+<!-- APPROVE CONFIRMATION DIALOG -->
+<div class="modal-overlay" id="approveModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <i class="fa-solid fa-circle-question modal-icon warning-color"></i>
+            <h2 class="modal-title">Approve Vendor</h2>
+        </div>
+        <div class="modal-body">
+            Are you sure you want to approve '<span id="approveBusinessName" style="font-weight: 700;"></span>'?
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary close-modal-btn">Cancel</button>
+            <button type="button" class="btn btn-primary" id="confirmApproveBtn" style="background-color: var(--success);">Approve Vendor</button>
+        </div>
+    </div>
+</div>
+
+<!-- SUSPEND CONFIRMATION DIALOG -->
+<div class="modal-overlay" id="suspendModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <i class="fa-solid fa-triangle-exclamation modal-icon danger-color"></i>
+            <h2 class="modal-title">Suspend Vendor</h2>
+        </div>
+        <div class="modal-body">
+            Are you sure you want to suspend '<span id="suspendBusinessName" style="font-weight: 700;"></span>'?
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary close-modal-btn">Cancel</button>
+            <button type="button" class="btn btn-primary" id="confirmSuspendBtn" style="background-color: var(--danger);">Suspend Vendor</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast-notification" id="toastNotification">
+    <i class="fa-solid fa-circle-check toast-success-icon"></i>
+    <span id="toastMessage">Success message</span>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/dashboard.js"></script>
+{% endblock %}

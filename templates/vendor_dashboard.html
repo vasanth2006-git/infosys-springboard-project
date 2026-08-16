@@ -1,0 +1,1126 @@
+{% extends "base.html" %}
+
+{% block title %}ShopSense - Vendor Portal{% endblock %}
+
+{% block head %}
+<!-- Chart.js CDN for Interactive Analytics Charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-logo" style="margin-bottom: 0.25rem;">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span>ShopSense</span>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--primary-color); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding-left: 0.5rem; margin-bottom: 2rem;">
+            Vendor Portal
+        </div>
+        
+        <nav class="sidebar-nav">
+            <button class="nav-item active" data-tab="dashboard-view" onclick="switchTab('dashboard-view')">
+                <i class="fa-solid fa-chart-line"></i>
+                Dashboard
+            </button>
+            <button class="nav-item" data-tab="my-catalog-view" onclick="switchTab('my-catalog-view')">
+                <i class="fa-solid fa-boxes-stacked"></i>
+                My Catalog
+            </button>
+            <button class="nav-item" data-tab="add-product-view" onclick="resetAddProductForm(); switchTab('add-product-view')">
+                <i class="fa-solid fa-square-plus"></i>
+                Add Product
+            </button>
+            <button class="nav-item" data-tab="insights-view" onclick="switchTab('insights-view')">
+                <i class="fa-solid fa-circle-nodes"></i>
+                Insights
+            </button>
+            <button class="nav-item" data-tab="profile-view" onclick="switchTab('profile-view')">
+                <i class="fa-solid fa-id-card"></i>
+                Profile
+            </button>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="/logout" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Log Out
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        
+        <!-- DASHBOARD TAB -->
+        <div id="dashboard-view" class="tab-content" style="display: block;">
+            <div class="content-header">
+                <h1 class="page-title">Vendor Dashboard</h1>
+                <p class="page-subtitle" style="color: var(--text-white); font-weight: 500; font-size: 1.1rem; margin-top: 0.35rem;">
+                    Welcome, {{ vendor.full_name }}
+                </p>
+            </div>
+            
+            <!-- Summary Cards -->
+            <div class="metrics-grid">
+                <!-- Card 1: Total Sales -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-total">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Total Sales</span>
+                        <span class="metric-value">{{ metrics.total_sales }}</span>
+                    </div>
+                </div>
+                
+                <!-- Card 2: Total Revenue -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-approved">
+                        <i class="fa-solid fa-sack-dollar"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Total Revenue</span>
+                        <span class="metric-value">${{ "%.2f"|format(metrics.total_revenue) }}</span>
+                    </div>
+                </div>
+                
+                <!-- Card 3: Total Transactions -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-pending">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Total Transactions</span>
+                        <span class="metric-value">{{ metrics.total_transactions }}</span>
+                    </div>
+                </div>
+                
+                <!-- Card 4: Products Listed -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-suspended" style="background-color: rgba(99, 102, 241, 0.15); color: var(--primary-light);">
+                        <i class="fa-solid fa-box"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Products Listed</span>
+                        <span class="metric-value">{{ metrics.products_listed }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Products Section -->
+            <div class="dashboard-section">
+                <div class="section-title-bar">Recent Products</div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_products %}
+                                {% for product in recent_products %}
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 1rem;">
+                                            <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width: 48px; height: 48px; border-radius: var(--radius-sm); object-fit: cover; border: 1px solid var(--border-color);">
+                                            <div>
+                                                <strong style="color: var(--text-white); font-size: 0.95rem; display: block;">{{ product.name }}</strong>
+                                                <span style="font-size: 0.8rem; color: var(--text-muted); max-width: 320px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ product.description }}">
+                                                    {{ product.description }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: #1c2438; color: var(--text-main);">{{ product.category }}</span>
+                                    </td>
+                                    <td style="font-weight: 600; color: var(--primary-color);">${{ "%.2f"|format(product.price) }}</td>
+                                    <td>
+                                        {% if product.stock > 0 %}
+                                            <span style="font-weight: 500;">{{ product.stock }} units</span>
+                                        {% else %}
+                                            <span style="color: var(--danger); font-weight: 600;">Out of Stock</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 3rem 1.5rem;">
+                                        <div style="color: var(--text-muted); margin-bottom: 1.25rem;">
+                                            <i class="fa-solid fa-box-open" style="font-size: 2.5rem; margin-bottom: 0.5rem; display: block; color: #3f3f46;"></i>
+                                            No products available.
+                                        </div>
+                                        <button class="btn btn-primary" onclick="switchTab('add-product-view')" style="width: auto; padding: 0.55rem 1.5rem; font-size: 0.9rem;">
+                                            <i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i> Add Product
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- MY CATALOG TAB -->
+        <div id="my-catalog-view" class="tab-content" style="display: none;">
+            <!-- Content Header with Icon next to Title -->
+            <div class="content-header" style="margin-bottom: 2rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
+                    <i class="fa-solid fa-boxes-stacked" style="color: var(--primary-color); font-size: 1.65rem;"></i>
+                    <h1 class="page-title" style="margin: 0; display: inline-block;">My Catalog</h1>
+                </div>
+                <p class="page-subtitle">Manage, edit, and organize all your store items.</p>
+            </div>
+            
+            <!-- Spacing and Search controls -->
+            <div class="controls-container" style="margin-bottom: 1.5rem; border-radius: var(--radius-sm);">
+                <div class="search-wrapper" style="width: 100%;">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="catalogSearchInput" class="search-input" placeholder="Search products by name or category..." oninput="filterCatalog()">
+                </div>
+            </div>
+            
+            <div class="dashboard-section" style="border-top-left-radius: 0; border-top-right-radius: 0;">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="catalogTableBody">
+                            {% if all_products %}
+                                {% for product in all_products %}
+                                <tr class="product-catalog-row" data-name="{{ product.name }}" data-category="{{ product.category }}">
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 1rem;">
+                                            <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width: 48px; height: 48px; border-radius: var(--radius-sm); object-fit: cover; border: 1px solid var(--border-color);">
+                                            <div>
+                                                <strong style="color: var(--text-white); font-size: 0.95rem; display: block;">{{ product.name }}</strong>
+                                                <span style="font-size: 0.8rem; color: var(--text-muted); max-width: 320px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ product.description }}">
+                                                    {{ product.description }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: #1c2438; color: var(--text-main);">{{ product.category }}</span>
+                                    </td>
+                                    <td style="font-weight: 600; color: var(--primary-color);">${{ "%.2f"|format(product.price) }}</td>
+                                    <td>{{ product.stock }} units</td>
+                                    <td>
+                                        {% if product.stock > 10 %}
+                                            <span class="badge badge-approved">Active</span>
+                                        {% elif product.stock >= 1 and product.stock <= 10 %}
+                                            <span class="badge badge-pending">Low Stock</span>
+                                        {% else %}
+                                            <span class="badge badge-suspended">Out of Stock</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn btn-approve" style="background-color: rgba(59, 130, 246, 0.12); color: #3b82f6;" onclick="alert('Viewing: {{ product.name | replace("\'", "\\\'") }}')">
+                                                <i class="fa-solid fa-eye"></i> View
+                                            </button>
+                                            <button class="action-btn btn-approve" style="background-color: var(--warning-bg); color: var(--warning);" onclick="openEditProductModal({{ product.id }})">
+                                                <i class="fa-solid fa-pen"></i> Edit
+                                            </button>
+                                            <button class="action-btn btn-suspend" onclick="openDeleteProductModal({{ product.id }}, '{{ product.name | replace("\'", "\\\'") }}')">
+                                                <i class="fa-solid fa-trash"></i> Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                <!-- Client-side search empty message -->
+                                <tr id="noCatalogResultsRow" style="display: none;">
+                                    <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                        No matching products found.
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 4rem 1.5rem;">
+                                        <div style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                                            <i class="fa-solid fa-box-open" style="font-size: 2.75rem; margin-bottom: 0.5rem; display: block; color: #3f3f46;"></i>
+                                            No products found.
+                                        </div>
+                                        <button class="btn btn-primary" onclick="switchTab('add-product-view')" style="width: auto; padding: 0.6rem 1.75rem; font-size: 0.9rem;">
+                                            <i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i> Add Product
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADD PRODUCT TAB -->
+        <div id="add-product-view" class="tab-content" style="display: none;">
+            <div class="content-header" style="margin-bottom: 2rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
+                    <i id="productFormIcon" class="fa-solid fa-square-plus" style="color: var(--primary-color); font-size: 1.65rem;"></i>
+                    <h1 class="page-title" id="productFormTitle" style="margin: 0; display: inline-block;">Add Product</h1>
+                </div>
+                <p class="page-subtitle" id="productFormSubtitle">Publish a new item to the ShopSense marketplace catalog.</p>
+            </div>
+            
+            <div class="dashboard-section" style="max-width: 760px;">
+                <div class="section-title-bar" id="productFormDetailsBar">New Product Details</div>
+                <div style="padding: 2rem;">
+                    <form action="/vendor/products/add" method="POST" id="addProductForm">
+                        <input type="hidden" name="product_id" id="edit_product_id" value="">
+                        
+                        <!-- Two-Column Layout -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem; margin-bottom: 1.25rem;">
+                            <!-- Left Column -->
+                            <div>
+                                <div class="form-group">
+                                    <label for="product_name" class="form-label">Product Name *</label>
+                                    <input type="text" name="name" id="product_name" class="form-control" placeholder="E.g., Wireless Noise-Cancelling Headphones" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="product_price" class="form-label">Price ($) *</label>
+                                    <input type="number" name="price" id="product_price" class="form-control" step="0.01" min="0" placeholder="E.g., 149.99" required>
+                                </div>
+                            </div>
+                            <!-- Right Column -->
+                            <div>
+                                <div class="form-group">
+                                    <label for="product_category" class="form-label">Category *</label>
+                                    <input type="text" name="category" id="product_category" class="form-control" placeholder="E.g., Electronics, Clothing" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="product_stock" class="form-label">Stock Quantity *</label>
+                                    <input type="number" name="stock" id="product_stock" class="form-control" min="0" placeholder="E.g., 25" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Full-Width Image URL Field -->
+                        <div class="form-group">
+                            <label for="product_image" class="form-label">Product Image URL (Optional)</label>
+                            <input type="url" name="image_url" id="product_image" class="form-control" placeholder="E.g., https://example.com/product.jpg">
+                        </div>
+
+                        <!-- Full-Width Description Field -->
+                        <div class="form-group">
+                            <label for="product_desc" class="form-label">Description (AI will enhance this)</label>
+                            <textarea name="description" id="product_desc" class="form-control" rows="4" placeholder="Describe your product... (Or leave empty and click 'Generate AI Description' below)"></textarea>
+                        </div>
+
+                        <!-- Actions Buttons at the Bottom -->
+                        <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-start; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-secondary" onclick="generateAIDescription()" style="width: auto; padding: 0.625rem 1.5rem; background-color: #27272a; border: 1px solid #3f3f46; color: #ffffff;">
+                                <i class="fa-solid fa-wand-magic-sparkles" style="margin-right: 0.5rem; color: var(--primary-color);"></i> Generate AI Description
+                            </button>
+                            <button type="submit" id="productFormSubmitBtn" class="btn btn-primary" style="width: auto; padding: 0.625rem 2.25rem;">
+                                Save Product
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="resetAndSwitchToCatalog()" style="width: auto; padding: 0.625rem 1.5rem;">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- INSIGHTS TAB -->
+        <div id="insights-view" class="tab-content" style="display: none;">
+            <div class="content-header" style="margin-bottom: 2rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
+                    <i class="fa-solid fa-circle-nodes" style="color: var(--primary-color); font-size: 1.65rem;"></i>
+                    <h1 class="page-title" style="margin: 0; display: inline-block;">Insights</h1>
+                </div>
+                <p class="page-subtitle">Analyze your sales performance, order counts, and trend charts.</p>
+            </div>
+
+            <!-- Summary Cards (4 in one row) -->
+            <div class="metrics-grid" style="margin-bottom: 2rem;">
+                <!-- Total Orders -->
+                <div class="metric-card">
+                    <div class="metric-icon-box" style="background-color: rgba(99, 102, 241, 0.15); color: #818cf8;">
+                        <i class="fa-solid fa-boxes-packing"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Total Orders</span>
+                        <span class="metric-value">1,248</span>
+                    </div>
+                </div>
+
+                <!-- Completed Orders -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-approved">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Completed Orders</span>
+                        <span class="metric-value">1,120</span>
+                    </div>
+                </div>
+
+                <!-- Pending Orders -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-pending">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Pending Orders</span>
+                        <span class="metric-value">96</span>
+                    </div>
+                </div>
+
+                <!-- Cancelled Orders -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-suspended">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Cancelled Orders</span>
+                        <span class="metric-value">32</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Trend Section -->
+            <div class="dashboard-section" style="margin-bottom: 2rem; border-radius: var(--radius-md);">
+                <div class="section-title-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <span>Sales Trend</span>
+                    <!-- Filters: Daily, Weekly, Monthly -->
+                    <div class="role-buttons" style="margin: 0; padding: 0.2rem; border-radius: var(--radius-sm);">
+                        <button class="role-btn active" id="filter-daily-btn" onclick="updateSalesTrend('daily')" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Daily</button>
+                        <button class="role-btn" id="filter-weekly-btn" onclick="updateSalesTrend('weekly')" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Weekly</button>
+                        <button class="role-btn" id="filter-monthly-btn" onclick="updateSalesTrend('monthly')" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Monthly</button>
+                    </div>
+                </div>
+                <div style="padding: 2rem 1.5rem; background-color: var(--bg-card); position: relative; height: 320px; width: 100%;">
+                    <canvas id="salesTrendChart" style="height: 100%; width: 100%;"></canvas>
+                </div>
+            </div>
+
+            <!-- Best Selling Products -->
+            <div class="dashboard-section" style="margin-bottom: 2rem;">
+                <div class="section-title-bar">Best Selling Products</div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Category</th>
+                                <th>Units Sold</th>
+                                <th>Sales / Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Pro Wireless Headphones X2</strong></td>
+                                <td><span class="badge" style="background-color: #1c2438; color: var(--text-main);">Electronics</span></td>
+                                <td style="font-weight: 500;">450 units</td>
+                                <td style="font-weight: 600; color: var(--success);">$67,495.50</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Ergonomic Office Mesh Chair</strong></td>
+                                <td><span class="badge" style="background-color: #1c2438; color: var(--text-main);">Home & Kitchen</span></td>
+                                <td style="font-weight: 500;">280 units</td>
+                                <td style="font-weight: 600; color: var(--success);">$55,720.00</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Waterproof Trail Running Shoes</strong></td>
+                                <td><span class="badge" style="background-color: #1c2438; color: var(--text-main);">Sports & Outdoors</span></td>
+                                <td style="font-weight: 500;">210 units</td>
+                                <td style="font-weight: 600; color: var(--success);">$27,090.00</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Minimalist Leather Wallet</strong></td>
+                                <td><span class="badge" style="background-color: #1c2438; color: var(--text-main);">Apparel</span></td>
+                                <td style="font-weight: 500;">185 units</td>
+                                <td style="font-weight: 600; color: var(--success);">$8,325.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFILE TAB -->
+        <div id="profile-view" class="tab-content" style="display: none;">
+            <div class="content-header" style="margin-bottom: 2rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
+                    <i class="fa-solid fa-id-card" style="color: var(--primary-color); font-size: 1.65rem;"></i>
+                    <h1 class="page-title" style="margin: 0; display: inline-block;">Vendor Profile</h1>
+                </div>
+                <p class="page-subtitle">Manage your account information and contact details.</p>
+            </div>
+
+            <!-- Profile Info Card -->
+            <div class="dashboard-section" style="max-width: 640px; margin: 0 auto;">
+                <div class="section-title-bar" style="text-align: center; padding: 2rem 1.5rem; background-color: #161619; border-bottom: 1px solid var(--border-color);">
+                    <!-- Profile Avatar -->
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--primary-hover)); display: flex; align-items: center; justify-content: center; font-size: 2.25rem; color: white; margin: 0 auto 1.5rem auto; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.25);">
+                        <i class="fa-solid fa-store"></i>
+                    </div>
+                    <h2 class="auth-title" id="profileHeaderName" style="color: var(--text-white); margin-bottom: 0.25rem; font-size: 1.4rem;">{{ vendor.full_name }}</h2>
+                    <p style="color: var(--primary-color); font-size: 0.95rem; font-weight: 600; margin: 0;" id="profileHeaderBusiness">{{ vendor.business_name }}</p>
+                </div>
+
+                <div style="padding: 2rem 2.5rem;">
+                    <!-- Error Banners for Profile -->
+                    <div class="error-message" id="profileErrorMessage" style="display: none; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span id="profileErrorText"></span>
+                    </div>
+
+                    <!-- Profile Form (Handles edit mode dynamically) -->
+                    <form id="profileEditForm" onsubmit="saveProfileChanges(event)">
+                        <!-- Full Name -->
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label class="form-label"><i class="fa-solid fa-user" style="margin-right: 0.5rem; color: var(--primary-color);"></i> Full Name</label>
+                            <span class="profile-value-text" id="view_full_name" style="display: block; font-size: 1rem; color: var(--text-white); font-weight: 500; padding: 0.5rem 0;">{{ vendor.full_name }}</span>
+                            <input type="text" id="edit_full_name" name="full_name" class="form-control" value="{{ vendor.full_name }}" style="display: none;" required>
+                        </div>
+
+                        <!-- Business Name -->
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label class="form-label"><i class="fa-solid fa-briefcase" style="margin-right: 0.5rem; color: var(--primary-color);"></i> Business Name</label>
+                            <span class="profile-value-text" id="view_business_name" style="display: block; font-size: 1rem; color: var(--text-white); font-weight: 500; padding: 0.5rem 0;">{{ vendor.business_name }}</span>
+                            <input type="text" id="edit_business_name" name="business_name" class="form-control" value="{{ vendor.business_name }}" style="display: none;" required>
+                        </div>
+
+                        <!-- Email Address (Read-only) -->
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label class="form-label"><i class="fa-solid fa-envelope" style="margin-right: 0.5rem; color: var(--primary-color);"></i> Email Address</label>
+                            <span class="profile-value-text" id="view_email" style="display: block; font-size: 1rem; color: var(--text-muted); font-weight: 500; padding: 0.5rem 0;">{{ vendor.email }}</span>
+                            <input type="email" id="edit_email" name="email" class="form-control" value="{{ vendor.email }}" style="display: none; background-color: #0c0c0e; color: var(--text-muted); border-color: #1f1f23; cursor: not-allowed;" disabled>
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label class="form-label"><i class="fa-solid fa-phone" style="margin-right: 0.5rem; color: var(--primary-color);"></i> Phone Number</label>
+                            <span class="profile-value-text" id="view_phone_number" style="display: block; font-size: 1rem; color: var(--text-white); font-weight: 500; padding: 0.5rem 0;">{{ vendor.phone_number or 'Not provided' }}</span>
+                            <input type="tel" id="edit_phone_number" name="phone_number" class="form-control" value="{{ vendor.phone_number or '' }}" style="display: none;" placeholder="E.g., +1 (555) 000-0000">
+                        </div>
+
+                        <!-- Business Address -->
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label class="form-label"><i class="fa-solid fa-location-dot" style="margin-right: 0.5rem; color: var(--primary-color);"></i> Business Address</label>
+                            <span class="profile-value-text" id="view_business_address" style="display: block; font-size: 1rem; color: var(--text-white); font-weight: 500; padding: 0.5rem 0; line-height: 1.5;">{{ vendor.business_address or 'Not provided' }}</span>
+                            <textarea id="edit_business_address" name="business_address" class="form-control" rows="3" style="display: none;" placeholder="Street, City, State, ZIP">{{ vendor.business_address or '' }}</textarea>
+                        </div>
+
+                        <!-- Secure Password Preview -->
+                        <div class="form-group" style="margin-bottom: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                            <label class="form-label"><i class="fa-solid fa-lock" style="margin-right: 0.5rem; color: var(--primary-color);"></i> Security Password</label>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="font-size: 1rem; color: var(--text-muted); font-weight: 500;">••••••••••••</span>
+                                <button type="button" class="btn btn-secondary" onclick="openChangePasswordModal()" style="width: auto; padding: 0.4rem 1rem; font-size: 0.8rem;">Change Password</button>
+                            </div>
+                        </div>
+
+                        <!-- Form Buttons -->
+                        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                            <!-- View mode buttons -->
+                            <button type="button" id="btnEditProfile" class="btn btn-primary" onclick="toggleProfileEditMode(true)">Edit Profile</button>
+                            
+                            <!-- Edit mode buttons (Hidden initially) -->
+                            <button type="submit" id="btnSaveProfile" class="btn btn-primary" style="display: none; flex: 1;">Save Changes</button>
+                            <button type="button" id="btnCancelProfile" class="btn btn-secondary" style="display: none; flex: 1;" onclick="toggleProfileEditMode(false)">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+    </main>
+</div>
+
+<!-- DELETE PRODUCT CONFIRMATION MODAL -->
+<div id="deleteProductModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <i class="fa-solid fa-triangle-exclamation modal-icon danger-color"></i>
+            <h3 class="modal-title">Delete Product</h3>
+        </div>
+        <div class="modal-body">
+            Are you sure you want to delete this product?
+            <p style="margin-top: 0.75rem; font-weight: 700; color: var(--text-white);" id="deleteProductNameText"></p>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteProductModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" style="background-color: var(--danger); color: white;" onclick="confirmDeleteProduct()">Delete Product</button>
+        </div>
+    </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div id="changePasswordModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 480px;">
+        <div class="modal-header">
+            <i class="fa-solid fa-key modal-icon" style="color: var(--primary-color);"></i>
+            <h3 class="modal-title">Change Password</h3>
+        </div>
+        
+        <!-- Error Banner inside Change Password Modal -->
+        <div class="error-message" id="changePasswordErrorMessage" style="display: none; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="changePasswordErrorText"></span>
+        </div>
+
+        <form id="changePasswordForm" onsubmit="submitChangePassword(event)">
+            <!-- Current Password -->
+            <div class="form-group">
+                <label for="current_password" class="form-label">Current Password *</label>
+                <div class="password-container">
+                    <input type="password" id="current_password" name="current_password" class="form-control" required placeholder="Enter current password">
+                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('current_password', this)">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- New Password -->
+            <div class="form-group">
+                <label for="new_password" class="form-label">New Password *</label>
+                <div class="password-container">
+                    <input type="password" id="new_password" name="new_password" class="form-control" minlength="6" required placeholder="At least 6 characters">
+                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('new_password', this)">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Confirm New Password -->
+            <div class="form-group">
+                <label for="confirm_password" class="form-label">Confirm New Password *</label>
+                <div class="password-container">
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" minlength="6" required placeholder="Re-enter new password">
+                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('confirm_password', this)">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 2rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Confirm Password Change</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- TOAST NOTIFICATION CONTAINER -->
+<div id="toast-notification" class="toast-notification">
+    <i class="fa-solid fa-circle-check toast-success-icon"></i>
+    <span id="toast-message">Action completed successfully.</span>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Tab switching for Vendor Dashboard
+    function switchTab(tabId) {
+        // Remove active class from all nav items and hide all tab contents
+        const navItems = document.querySelectorAll(".nav-item");
+        const tabContents = document.querySelectorAll(".tab-content");
+
+        navItems.forEach(item => item.classList.remove("active"));
+        tabContents.forEach(content => content.style.display = "none");
+
+        // Activate matching nav button and show content block
+        const targetNav = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+        const targetContent = document.getElementById(tabId);
+
+        if (targetNav && targetContent) {
+            targetNav.classList.add("active");
+            targetContent.style.display = "block";
+            localStorage.setItem("active_vendor_tab", tabId);
+            window.location.hash = tabId;
+        }
+    }
+
+    // Client-side instant catalog search filtering by name or category
+    function filterCatalog() {
+        const query = document.getElementById("catalogSearchInput").value.toLowerCase().trim();
+        const rows = document.querySelectorAll("#catalogTableBody tr.product-catalog-row");
+        let foundAny = false;
+
+        rows.forEach(row => {
+            const name = row.getAttribute("data-name").toLowerCase();
+            const category = row.getAttribute("data-category").toLowerCase();
+
+            if (name.includes(query) || category.includes(query)) {
+                row.style.display = "";
+                foundAny = true;
+            } else {
+                row.style.display = "none";
+            }
+        });
+
+        const noResultsRow = document.getElementById("noCatalogResultsRow");
+        if (noResultsRow) {
+            noResultsRow.style.display = foundAny ? "none" : "";
+        }
+    }
+
+    // Client-side mock AI generated description helper
+    function generateAIDescription() {
+        const name = document.getElementById("product_name").value.trim();
+        const category = document.getElementById("product_category").value.trim();
+        const descArea = document.getElementById("product_desc");
+
+        if (!name) {
+            alert("Please input the Product Name first to generate an AI description.");
+            return;
+        }
+
+        descArea.value = `This premium ${name} is curated for our exclusive ${category || 'retail'} catalog. Crafted with modern styling and high-performance engineering to elevate your retail catalog.`;
+    }
+
+    // Chart.js initialization and updates for Insights page
+    let salesChartInstance = null;
+
+    const chartSampleData = {
+        daily: {
+            labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            data: [1200, 1900, 1500, 2500, 2200, 3000, 2800],
+            label: "Daily Revenue ($)"
+        },
+        weekly: {
+            labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
+            data: [12500, 15000, 18200, 21000],
+            label: "Weekly Revenue ($)"
+        },
+        monthly: {
+            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            data: [45000, 48000, 52000, 58000, 62000, 75000, 71000, 68000, 73000, 80000, 85000, 95000],
+            label: "Monthly Revenue ($)"
+        }
+    };
+
+    function initSalesChart() {
+        const ctx = document.getElementById("salesTrendChart");
+        if (!ctx) return;
+        
+        if (salesChartInstance) {
+            salesChartInstance.destroy();
+        }
+        
+        const activeData = chartSampleData.daily;
+        
+        salesChartInstance = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: activeData.labels,
+                datasets: [{
+                    label: activeData.label,
+                    data: activeData.data,
+                    borderColor: "#f97316",
+                    backgroundColor: "rgba(249, 115, 22, 0.08)",
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: "#f97316",
+                    pointBorderColor: "#ffffff",
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: "#a1a1aa",
+                            font: { family: "'Inter', sans-serif" }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: "#27272a" },
+                        ticks: { color: "#a1a1aa", font: { family: "'Inter', sans-serif" } }
+                    },
+                    y: {
+                        grid: { color: "#27272a" },
+                        ticks: { color: "#a1a1aa", font: { family: "'Inter', sans-serif" } }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateSalesTrend(filterType) {
+        const buttons = {
+            daily: document.getElementById("filter-daily-btn"),
+            weekly: document.getElementById("filter-weekly-btn"),
+            monthly: document.getElementById("filter-monthly-btn")
+        };
+        
+        Object.keys(buttons).forEach(key => {
+            if (buttons[key]) {
+                if (key === filterType) {
+                    buttons[key].classList.add("active");
+                } else {
+                    buttons[key].classList.remove("active");
+                }
+            }
+        });
+        
+        if (!salesChartInstance) return;
+        
+        const nextData = chartSampleData[filterType];
+        salesChartInstance.data.labels = nextData.labels;
+        salesChartInstance.data.datasets[0].label = nextData.label;
+        salesChartInstance.data.datasets[0].data = nextData.data;
+        salesChartInstance.update();
+    }
+
+    // Toast Notification helper
+    function showToast(message) {
+        const toast = document.getElementById("toast-notification");
+        const toastMsg = document.getElementById("toast-message");
+        if (!toast || !toastMsg) return;
+        
+        toastMsg.textContent = message;
+        toast.classList.add("active");
+        
+        setTimeout(() => {
+            toast.classList.remove("active");
+        }, 3000);
+    }
+
+    // PROFILE TAB View / Edit Mode Switcher
+    function toggleProfileEditMode(isEditing) {
+        const textElements = document.querySelectorAll(".profile-value-text");
+        const formInputs = document.querySelectorAll("#profileEditForm input:not(#edit_email), #profileEditForm textarea");
+        
+        const btnEdit = document.getElementById("btnEditProfile");
+        const btnSave = document.getElementById("btnSaveProfile");
+        const btnCancel = document.getElementById("btnCancelProfile");
+        const errBanner = document.getElementById("profileErrorMessage");
+
+        if (errBanner) errBanner.style.display = "none";
+
+        if (isEditing) {
+            textElements.forEach(el => el.style.display = "none");
+            formInputs.forEach(el => el.style.display = "block");
+            document.getElementById("edit_email").style.display = "block"; // disabled email field
+            
+            btnEdit.style.display = "none";
+            btnSave.style.display = "block";
+            btnCancel.style.display = "block";
+        } else {
+            textElements.forEach(el => el.style.display = "block");
+            formInputs.forEach(el => el.style.display = "none");
+            document.getElementById("edit_email").style.display = "none";
+            
+            // Reset inputs to match their current span text
+            document.getElementById("edit_full_name").value = document.getElementById("view_full_name").textContent.trim();
+            document.getElementById("edit_business_name").value = document.getElementById("view_business_name").textContent.trim();
+            
+            const rawPhone = document.getElementById("view_phone_number").textContent.trim();
+            document.getElementById("edit_phone_number").value = (rawPhone === "Not provided") ? "" : rawPhone;
+            
+            const rawAddress = document.getElementById("view_business_address").textContent.trim();
+            document.getElementById("edit_business_address").value = (rawAddress === "Not provided") ? "" : rawAddress;
+
+            btnEdit.style.display = "block";
+            btnSave.style.display = "none";
+            btnCancel.style.display = "none";
+        }
+    }
+
+    // Profile Asynchronous Save handler
+    async function saveProfileChanges(event) {
+        event.preventDefault();
+        
+        const errBanner = document.getElementById("profileErrorMessage");
+        const errText = document.getElementById("profileErrorText");
+        if (errBanner) errBanner.style.display = "none";
+
+        const formData = new FormData(event.target);
+        
+        try {
+            const response = await fetch("/vendor/profile/update", {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                // Update profile view texts
+                const fullName = document.getElementById("edit_full_name").value.trim();
+                const businessName = document.getElementById("edit_business_name").value.trim();
+                const phoneNumber = document.getElementById("edit_phone_number").value.trim();
+                const businessAddress = document.getElementById("edit_business_address").value.trim();
+
+                document.getElementById("view_full_name").textContent = fullName;
+                document.getElementById("view_business_name").textContent = businessName;
+                document.getElementById("view_phone_number").textContent = phoneNumber || "Not provided";
+                document.getElementById("view_business_address").textContent = businessAddress || "Not provided";
+
+                // Update Header
+                document.getElementById("profileHeaderName").textContent = fullName;
+                document.getElementById("profileHeaderBusiness").textContent = businessName;
+
+                toggleProfileEditMode(false);
+                showToast("Profile updated successfully!");
+            } else {
+                const data = await response.json();
+                errText.textContent = data.detail || "Failed to update profile details.";
+                errBanner.style.display = "flex";
+            }
+        } catch (error) {
+            errText.textContent = "A connection error occurred. Please try again.";
+            errBanner.style.display = "flex";
+            console.error(error);
+        }
+    }
+
+    // Password change modal management
+    function openChangePasswordModal() {
+        const errBanner = document.getElementById("changePasswordErrorMessage");
+        if (errBanner) errBanner.style.display = "none";
+        document.getElementById("changePasswordForm").reset();
+        
+        // Reset password toggle states to locked
+        const toggles = document.querySelectorAll("#changePasswordModal .password-toggle i");
+        toggles.forEach(icon => {
+            icon.className = "fa-solid fa-eye";
+        });
+        const inputs = document.querySelectorAll("#changePasswordModal input");
+        inputs.forEach(input => {
+            input.type = "password";
+        });
+
+        const modal = document.getElementById("changePasswordModal");
+        modal.classList.add("active");
+    }
+
+    function closeChangePasswordModal() {
+        const modal = document.getElementById("changePasswordModal");
+        modal.classList.remove("active");
+    }
+
+    function togglePasswordVisibility(id, btn) {
+        const input = document.getElementById(id);
+        if (!input) return;
+        const icon = btn.querySelector("i");
+        if (input.type === "password") {
+            input.type = "text";
+            icon.className = "fa-solid fa-eye-slash";
+        } else {
+            input.type = "password";
+            icon.className = "fa-solid fa-eye";
+        }
+    }
+
+    async function submitChangePassword(event) {
+        event.preventDefault();
+        
+        const errBanner = document.getElementById("changePasswordErrorMessage");
+        const errText = document.getElementById("changePasswordErrorText");
+        if (errBanner) errBanner.style.display = "none";
+
+        const currentPass = document.getElementById("current_password").value;
+        const newPass = document.getElementById("new_password").value;
+        const confirmPass = document.getElementById("confirm_password").value;
+
+        // Front-end Validations
+        if (newPass.length < 6) {
+            errText.textContent = "New password must be at least 6 characters.";
+            errBanner.style.display = "flex";
+            return;
+        }
+
+        if (newPass !== confirmPass) {
+            errText.textContent = "New Password and Confirm New Password must match.";
+            errBanner.style.display = "flex";
+            return;
+        }
+
+        if (currentPass === newPass) {
+            errText.textContent = "New password cannot be the same as current password.";
+            errBanner.style.display = "flex";
+            return;
+        }
+
+        const formData = new FormData(event.target);
+        
+        try {
+            const response = await fetch("/vendor/profile/change-password", {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                closeChangePasswordModal();
+                showToast("Password changed successfully!");
+            } else {
+                const data = await response.json();
+                errText.textContent = data.detail || "Failed to change password. Please verify current password.";
+                errBanner.style.display = "flex";
+            }
+        } catch (error) {
+            errText.textContent = "A connection error occurred. Please try again.";
+            errBanner.style.display = "flex";
+            console.error(error);
+        }
+    }
+
+    // Form adaptabilities for Add vs Edit Product
+    function resetAddProductForm() {
+        const form = document.getElementById("addProductForm");
+        if (!form) return;
+
+        form.reset();
+        document.getElementById("edit_product_id").value = "";
+        form.action = "/vendor/products/add";
+        
+        document.getElementById("productFormTitle").textContent = "Add Product";
+        document.getElementById("productFormSubtitle").textContent = "Publish a new item to the ShopSense marketplace catalog.";
+        document.getElementById("productFormDetailsBar").textContent = "New Product Details";
+        document.getElementById("productFormSubmitBtn").textContent = "Save Product";
+        
+        const icon = document.getElementById("productFormIcon");
+        if (icon) {
+            icon.className = "fa-solid fa-square-plus";
+        }
+    }
+
+    function resetAndSwitchToCatalog() {
+        resetAddProductForm();
+        switchTab("my-catalog-view");
+    }
+
+    async function openEditProductModal(productId) {
+        resetAddProductForm();
+        
+        try {
+            const response = await fetch(`/vendor/product/${productId}`);
+            if (response.ok) {
+                const product = await response.json();
+                
+                // Pre-fill inputs
+                document.getElementById("edit_product_id").value = product.id;
+                document.getElementById("product_name").value = product.name;
+                document.getElementById("product_price").value = product.price;
+                document.getElementById("product_category").value = product.category;
+                document.getElementById("product_stock").value = product.stock;
+                document.getElementById("product_image").value = product.image_url || "";
+                document.getElementById("product_desc").value = product.description || "";
+
+                // Update UI titles/actions
+                const form = document.getElementById("addProductForm");
+                form.action = `/vendor/products/edit/${product.id}`;
+
+                document.getElementById("productFormTitle").textContent = "Edit Product";
+                document.getElementById("productFormSubtitle").textContent = "Update your product details.";
+                document.getElementById("productFormDetailsBar").textContent = "Update Product Details";
+                document.getElementById("productFormSubmitBtn").textContent = "Update Product";
+
+                const icon = document.getElementById("productFormIcon");
+                if (icon) {
+                    icon.className = "fa-solid fa-pen-to-square";
+                }
+
+                // Switch Tab to add/edit product view
+                switchTab("add-product-view");
+            } else {
+                alert("Failed to load product details.");
+            }
+        } catch (error) {
+            console.error("Error fetching product details:", error);
+            alert("A connection error occurred while loading product details.");
+        }
+    }
+
+    // Delete Product Dialog management
+    let currentDeleteProductId = null;
+
+    function openDeleteProductModal(productId, productName) {
+        currentDeleteProductId = productId;
+        document.getElementById("deleteProductNameText").textContent = productName;
+        
+        const modal = document.getElementById("deleteProductModal");
+        modal.classList.add("active");
+    }
+
+    function closeDeleteProductModal() {
+        currentDeleteProductId = null;
+        const modal = document.getElementById("deleteProductModal");
+        modal.classList.remove("active");
+    }
+
+    async function confirmDeleteProduct() {
+        if (!currentDeleteProductId) return;
+
+        try {
+            const response = await fetch(`/vendor/products/delete/${currentDeleteProductId}`, {
+                method: "POST"
+            });
+
+            if (response.ok) {
+                closeDeleteProductModal();
+                showToast("Product deleted successfully.");
+                
+                // Reload after short delay to show updated catalog
+                setTimeout(() => {
+                    window.location.href = "/vendor/dashboard?status=deleted#my-catalog-view";
+                    window.location.reload();
+                }, 1000);
+            } else {
+                alert("Failed to delete product.");
+            }
+        } catch (error) {
+            console.error("Error deleting product:", error);
+            alert("A connection error occurred while deleting product.");
+        }
+    }
+
+    // Set initial tab from hash or localStorage and handle redirect status queries
+    document.addEventListener("DOMContentLoaded", () => {
+        // Parse Query Statuses
+        const params = new URLSearchParams(window.location.search);
+        const status = params.get("status");
+        if (status) {
+            if (status === "added") {
+                showToast("Product added successfully.");
+            } else if (status === "updated") {
+                showToast("Product updated successfully.");
+            } else if (status === "deleted") {
+                showToast("Product deleted successfully.");
+            }
+            
+            // Clear status query param from address bar without reloading
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + window.location.hash;
+            window.history.replaceState({ path: cleanUrl }, "", cleanUrl);
+        }
+
+        let initialTab = window.location.hash.replace("#", "") || localStorage.getItem("active_vendor_tab") || "dashboard-view";
+        if (!document.getElementById(initialTab)) {
+            initialTab = "dashboard-view";
+        }
+        switchTab(initialTab);
+        
+        // Initialize chart
+        initSalesChart();
+    });
+</script>
+{% endblock %}
