@@ -48,6 +48,33 @@ class Transaction(Base):
     amount = Column(Float, nullable=False)
     quantity = Column(Integer, nullable=False)
 
+class Customer(Base):
+    __tablename__ = "customers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    total_spend = Column(Float, nullable=False, default=0.0)
+
+    # Future integration mapping:
+    # transactions = relationship("Transaction", back_populates="customer")
+
+    @property
+    def segment(self) -> str:
+        if self.total_spend >= 1000:
+            return "Premium Customer"
+        elif self.total_spend >= 100:
+            return "Regular Customer"
+        else:
+            return "New Customer"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "total_spend": self.total_spend,
+            "segment": self.segment
+        }
+
 @event.listens_for(Transaction, 'after_insert')
 def reduce_stock_on_transaction(mapper, connection, target):
     if target.product_id:
@@ -55,3 +82,4 @@ def reduce_stock_on_transaction(mapper, connection, target):
             text("UPDATE products SET stock = IF(stock >= :qty, stock - :qty, 0) WHERE id = :pid"),
             {"qty": target.quantity, "pid": target.product_id}
         )
+

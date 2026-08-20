@@ -709,6 +709,22 @@ button {
     color: var(--danger);
 }
 
+.badge-premium-customer {
+    background-color: var(--success-bg);
+    color: var(--success);
+}
+
+.badge-regular-customer {
+    background-color: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+}
+
+.badge-new-customer {
+    background-color: rgba(249, 115, 22, 0.12);
+    color: var(--primary-color);
+}
+
+
 /* Actions in Table */
 .action-buttons {
     display: flex;
@@ -953,3 +969,98 @@ button {
         padding: 2rem 1.5rem;
     }
 }
+
+/* Customer Analytics Page Styling */
+.customer-analytics-section {
+    background-color: #0d0d0f; /* Rich charcoal dark background */
+    border: 1px solid #1f1f23;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.01);
+    overflow: hidden;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.customer-analytics-section:hover {
+    border-color: rgba(249, 115, 22, 0.15); /* Subtle amber outline on section hover */
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 15px rgba(249, 115, 22, 0.05);
+}
+
+.customer-analytics-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.customer-analytics-table th {
+    background-color: #121215;
+    color: var(--text-muted);
+    font-weight: 700;
+    padding: 1.2rem 1.75rem;
+    border-bottom: 2px solid #1f1f23;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+}
+
+.customer-analytics-table td {
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid #18181b;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.customer-analytics-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.customer-analytics-table tbody tr:hover td {
+    background-color: #161619;
+    color: var(--text-white);
+}
+
+.customer-analytics-table td strong {
+    color: var(--text-white);
+    font-weight: 600;
+}
+
+/* Format Total Spend in Monospace style */
+.customer-analytics-table td:nth-child(2) {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 700;
+    color: #e4e4e7;
+    font-size: 1.05rem;
+}
+
+/* Badge Refinements specifically for Customer segments */
+.customer-analytics-table .badge-premium-customer,
+.customer-analytics-table .badge-regular-customer,
+.customer-analytics-table .badge-new-customer {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.725rem;
+    font-weight: 700;
+    border-radius: 6px;
+    letter-spacing: 0.025em;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid transparent;
+}
+
+.customer-analytics-table .badge-premium-customer {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+.customer-analytics-table .badge-regular-customer {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.25);
+}
+
+.customer-analytics-table .badge-new-customer {
+    background-color: rgba(249, 115, 22, 0.1);
+    color: #fb923c;
+    border-color: rgba(249, 115, 22, 0.25);
+}
+
+

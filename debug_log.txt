@@ -25,3 +25,8 @@ Table DESCRIBE: transactions
  - product_id: int (Null=YES, Key=MUL, Default=None, Extra=)
  - amount: float (Null=NO, Key=, Default=None, Extra=)
  - quantity: int (Null=NO, Key=, Default=None, Extra=)
+
+Table DESCRIBE: customers
+ - id: int (Null=NO, Key=PRI, Default=None, Extra=auto_increment)
+ - name: varchar(100) (Null=NO, Key=, Default=None, Extra=)
+ - total_spend: float (Null=NO, Key=, Default=None, Extra=)

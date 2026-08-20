@@ -457,6 +457,123 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Historical Data Validation Section -->
+            <div class="dashboard-section" style="margin-bottom: 2rem;">
+                <div class="section-title-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <span>Historical Data Validation</span>
+                    <span class="badge" style="background-color: {% if validation_summary == 'Historical Data Validation: Passed' %}var(--success-bg){% else %}var(--danger-bg){% endif %}; color: {% if validation_summary == 'Historical Data Validation: Passed' %}var(--success){% else %}var(--danger){% endif %}; border: 1px solid {% if validation_summary == 'Historical Data Validation: Passed' %}rgba(16, 185, 129, 0.25){% else %}rgba(239, 68, 68, 0.25){% endif %}; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 700; font-size: 0.85rem;">
+                        {{ validation_summary }}
+                    </span>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Historical Quantity Sold</th>
+                                <th>SQL Calculated Result</th>
+                                <th>AI Validation Result</th>
+                                <th>Validation Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if validation_records %}
+                                {% for record in validation_records %}
+                                <tr>
+                                    <td><strong>{{ record.product_name }}</strong></td>
+                                    <td style="font-weight: 500;">{{ record.quantity_sold }} units</td>
+                                    <td>
+                                        <span class="badge" style="background-color: #1c2438; color: var(--text-main);">
+                                            {{ record.sql_result }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: #1c2438; color: var(--text-main);">
+                                            {{ record.ai_result }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: {% if '✅' in record.status %}var(--success-bg){% else %}var(--danger-bg){% endif %}; color: {% if '✅' in record.status %}var(--success){% else %}var(--danger){% endif %}; font-weight: 700; padding: 0.25rem 0.625rem; border-radius: 50px;">
+                                            {{ record.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                        Add products to your catalog to generate historical validation data.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- AI Inventory Forecast & Restock Recommendation Section -->
+            <div class="dashboard-section" style="margin-bottom: 2rem;">
+                <div class="section-title-bar">
+                    <span>AI Inventory Forecast & Restock Recommendation</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Current Stock</th>
+                                <th>Predicted Demand</th>
+                                <th>AI Restock Recommendation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if forecast_records %}
+                                {% for record in forecast_records %}
+                                <tr>
+                                    <td><strong>{{ record.product_name }}</strong></td>
+                                    <td style="font-weight: 500;">
+                                        {% if record.current_stock > 0 %}
+                                            {{ record.current_stock }} units
+                                        {% else %}
+                                            <span style="color: var(--danger); font-weight: 600;">Out of Stock</span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="font-weight: 500;">
+                                        {% if record.predicted_demand == 'N/A' %}
+                                            <span style="color: var(--text-muted);">N/A</span>
+                                        {% else %}
+                                            {{ record.predicted_demand }} units
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if record.recommendation == 'Restock Recommended' %}
+                                            <span class="badge" style="background-color: var(--danger-bg); color: var(--danger); font-weight: 700; padding: 0.25rem 0.625rem; border-radius: 50px;">
+                                                <i class="fa-solid fa-triangle-exclamation" style="margin-right: 0.25rem;"></i> Restock Recommended
+                                            </span>
+                                        {% elif record.recommendation == 'Stock Sufficient' %}
+                                            <span class="badge" style="background-color: var(--success-bg); color: var(--success); font-weight: 700; padding: 0.25rem 0.625rem; border-radius: 50px;">
+                                                <i class="fa-solid fa-circle-check" style="margin-right: 0.25rem;"></i> Stock Sufficient
+                                            </span>
+                                        {% else %}
+                                            <span class="badge" style="background-color: var(--border-color); color: var(--text-muted); font-weight: 500; padding: 0.25rem 0.625rem; border-radius: 50px;">
+                                                <i class="fa-solid fa-circle-info" style="margin-right: 0.25rem;"></i> {{ record.recommendation }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                        Add products to your catalog to generate forecasting data.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <!-- PROFILE TAB -->

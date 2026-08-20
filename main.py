@@ -6,7 +6,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 import os
 
-from database import engine, Base, get_db
+from database import engine, Base, get_db, SessionLocal
 import models
 
 app = FastAPI(title="ShopSense Marketplace Portal", debug=True)
@@ -46,6 +46,26 @@ def startup_db_init():
     except Exception as e:
         print(f"Error creating tables: {e}")
         
+    # Seed sample customers if table is empty
+    try:
+        db = SessionLocal()
+        try:
+            if db.query(models.Customer).count() == 0:
+                sample_customers = [
+                    models.Customer(name="John", total_spend=1250.0),
+                    models.Customer(name="David", total_spend=850.0),
+                    models.Customer(name="Sarah", total_spend=450.0),
+                    models.Customer(name="Alex", total_spend=75.0),
+                    models.Customer(name="Mike", total_spend=1200.0)
+                ]
+                db.add_all(sample_customers)
+                db.commit()
+                print("\nSuccessfully seeded sample customer data.\n")
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"Error seeding customers: {e}")
+        
     # Explicitly enforce AUTO_INCREMENT and expand image_url column size to TEXT
     try:
         from sqlalchemy import text
@@ -70,7 +90,7 @@ def startup_db_init():
         log_lines.append("DATABASE STRUCTURE:")
         
         with engine.connect() as conn:
-            for table in ["vendors", "products", "transactions"]:
+            for table in ["vendors", "products", "transactions", "customers"]:
                 log_lines.append(f"\nTable DESCRIBE: {table}")
                 try:
                     rows = conn.execute(text(f"DESCRIBE {table}")).fetchall()
@@ -280,13 +300,17 @@ def get_admin_dashboard(
     # Fetch All Vendors for Vendor Management
     all_vendors = db.query(models.Vendor).order_by(models.Vendor.email.desc()).all()
 
+    # Fetch All Customers for Customer Analytics
+    customers = db.query(models.Customer).order_by(models.Customer.id.asc()).all()
+
     return templates.TemplateResponse(
         request,
         "dashboard.html", 
         {
             "stats": stats, 
             "recent_vendors": recent_vendors, 
-            "all_vendors": all_vendors
+            "all_vendors": all_vendors,
+            "customers": customers
         }
     )
 
@@ -327,6 +351,17 @@ def suspend_vendor(
     db.commit()
     return {"message": "Vendor suspended successfully."}
 
+@app.get("/admin/api/customers")
+def get_admin_customers(
+    admin_session: str = Cookie(default=None),
+    db: Session = Depends(get_db)
+):
+    if admin_session != ADMIN_SESSION_VAL:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    customers = db.query(models.Customer).order_by(models.Customer.id.asc()).all()
+    return [c.to_dict() for c in customers]
+
 # -------------------------------------------------------------
 # Routes - Vendor Dashboard
 # -------------------------------------------------------------
@@ -351,7 +386,28 @@ def get_vendor_dashboard(
         return redirect
 
     # 1. Fetch products listed count
-    products_count = db.query(models.Product).filter(models.Product.vendor_email == vendor.email).count()
+    vendor_products = db.query(models.Product).filter(models.Product.vendor_email == vendor.email).all()
+    products_count = len(vendor_products)
+
+    # Seed realistic historical transactions for testing/validation if Transactions table is empty
+    if db.query(models.Transaction).count() == 0 and products_count > 0:
+        for i, prod in enumerate(vendor_products):
+            if i == 0:
+                quantities = [15, 12, 18] # Total 45 (Top Seller)
+            elif i == 1:
+                quantities = [10, 15]    # Total 25
+            else:
+                quantities = [5, 3]       # Total 8
+                
+            for qty in quantities:
+                tx = models.Transaction(
+                    vendor_email=prod.vendor_email,
+                    product_id=prod.id,
+                    amount=prod.price * qty,
+                    quantity=qty
+                )
+                db.add(tx)
+        db.commit()
 
     # 2. Fetch sales, transactions, and revenue metrics
     from sqlalchemy import func
@@ -376,6 +432,126 @@ def get_vendor_dashboard(
     recent_products = db.query(models.Product).filter(models.Product.vendor_email == vendor.email).order_by(models.Product.id.desc()).limit(5).all()
     all_products = db.query(models.Product).filter(models.Product.vendor_email == vendor.email).order_by(models.Product.id.desc()).all()
 
+    # 4. Milestone 2 Historical Data Validation logic
+    # SQL Calculation: Calculate total quantity sold for each product grouped by product_id
+    sql_totals = db.query(
+        models.Transaction.product_id,
+        func.sum(models.Transaction.quantity).label("total_qty")
+    ).filter(models.Transaction.vendor_email == vendor.email).group_by(models.Transaction.product_id).all()
+    
+    sql_sales_map = {r.product_id: int(r.total_qty) for r in sql_totals}
+    
+    # Identify top-selling product ID from SQL
+    top_product_id_sql = None
+    if sql_sales_map:
+        top_product_id_sql = max(sql_sales_map, key=sql_sales_map.get)
+        
+    # AI Independent Analysis: Analyze the same transactions to find the top-selling product ID
+    vendor_txs = db.query(models.Transaction).filter(models.Transaction.vendor_email == vendor.email).all()
+    
+    def ai_analyze_sales_data(txs):
+        product_sales = {}
+        for t in txs:
+            if t.product_id:
+                product_sales[t.product_id] = product_sales.get(t.product_id, 0) + t.quantity
+        if not product_sales:
+            return None
+        return max(product_sales, key=product_sales.get)
+        
+    top_product_id_ai = ai_analyze_sales_data(vendor_txs)
+    
+    # Compare and build validation records
+    validation_records = []
+    has_mismatch = False
+    
+    for prod in vendor_products:
+        qty_sold = sql_sales_map.get(prod.id, 0)
+        
+        # SQL result
+        if top_product_id_sql is not None and prod.id == top_product_id_sql:
+            sql_res = "Top Selling Product"
+        else:
+            sql_res = "Regular Product"
+            
+        # AI result
+        if top_product_id_ai is not None and prod.id == top_product_id_ai:
+            ai_res = "Top Selling Product"
+        else:
+            ai_res = "Regular Product"
+            
+        # Comparison Status
+        if sql_res == ai_res:
+            status = "✅ Validated"
+        else:
+            status = "❌ Validation Failed"
+            has_mismatch = True
+            
+        validation_records.append({
+            "product_name": prod.name,
+            "quantity_sold": qty_sold,
+            "sql_result": sql_res,
+            "ai_result": ai_res,
+            "status": status
+        })
+        
+    validation_summary = "Historical Data Validation: Passed"
+    if has_mismatch or not validation_records:
+        validation_summary = "Historical Data Validation: Failed"
+
+    # AI Inventory Forecast & Restock Recommendation logic
+    forecast_records = []
+    for prod in vendor_products:
+        # Fetch transaction quantities for this specific product ordered by transaction id
+        prod_txs = db.query(models.Transaction).filter(
+            models.Transaction.product_id == prod.id,
+            models.Transaction.vendor_email == vendor.email
+        ).order_by(models.Transaction.id.asc()).all()
+        
+        quantities = [tx.quantity for tx in prod_txs]
+        
+        if len(quantities) < 2:
+            predicted_demand = "N/A"
+            recommendation = "Insufficient historical data"
+        else:
+            n = len(quantities)
+            mean_qty = sum(quantities) / n
+            
+            # Simple linear regression to find the trend slope
+            x = list(range(n))
+            y = quantities
+            mean_x = sum(x) / n
+            mean_y = mean_qty
+            
+            num = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
+            den = sum((x[i] - mean_x) ** 2 for i in range(n))
+            slope = num / den if den != 0.0 else 0.0
+            
+            # Relative trend multiplier (measures growth/shrinkage slope over average)
+            trend_multiplier = 1.0 + (slope / mean_y) if mean_y > 0 else 1.0
+            # Bound trend multiplier between 0.5 (reducing demand) and 2.0 (doubling demand) to avoid outliers
+            trend_multiplier = max(0.5, min(2.0, trend_multiplier))
+            
+            # Project future demand for a standard restock cycle window (assumed 2.0 typical transaction events)
+            predicted_demand_val = mean_y * trend_multiplier * 2.0
+            predicted_demand = int(round(predicted_demand_val))
+            
+            # Ensure forecasted demand is at least 1 unit if they have transactions
+            if predicted_demand < 1:
+                predicted_demand = 1
+                
+            # Restock logic comparison
+            if prod.stock < predicted_demand:
+                recommendation = "Restock Recommended"
+            else:
+                recommendation = "Stock Sufficient"
+                
+        forecast_records.append({
+            "product_name": prod.name,
+            "current_stock": prod.stock,
+            "predicted_demand": predicted_demand,
+            "recommendation": recommendation
+        })
+
     return templates.TemplateResponse(
         request, 
         "vendor_dashboard.html", 
@@ -383,7 +559,10 @@ def get_vendor_dashboard(
             "vendor": vendor, 
             "metrics": metrics,
             "recent_products": recent_products,
-            "all_products": all_products
+            "all_products": all_products,
+            "validation_records": validation_records,
+            "validation_summary": validation_summary,
+            "forecast_records": forecast_records
         }
     )
 

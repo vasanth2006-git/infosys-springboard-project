@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initialize tabs from hash, localStorage, or default to 'dashboard-view'
     let defaultTab = window.location.hash.replace("#", "") || localStorage.getItem("active_admin_tab") || "dashboard-view";
-    if (defaultTab !== "dashboard-view" && defaultTab !== "vendor-management-view") {
+    if (defaultTab !== "dashboard-view" && defaultTab !== "vendor-management-view" && defaultTab !== "customer-analytics-view") {
         defaultTab = "dashboard-view";
     }
     switchTab(defaultTab);
