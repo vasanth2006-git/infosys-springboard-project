@@ -1,0 +1,574 @@
+{% extends "base.html" %}
+
+{% block title %}ShopSense - AI Data Analyst{% endblock %}
+
+{% block head %}
+<style>
+    .ai-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    .query-box {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+    }
+    .response-box {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        display: none;
+    }
+    .loader-box {
+        display: none;
+        text-align: center;
+        padding: 2.5rem;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+    }
+    .error-box {
+        display: none;
+        background-color: rgba(239, 68, 68, 0.05);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-left: 4px solid var(--danger);
+        border-radius: var(--radius-sm);
+        padding: 1.25rem;
+        color: var(--text-white);
+    }
+    .sql-drawer {
+        display: none;
+        margin-top: 1.25rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border-color);
+    }
+    .sql-code {
+        background-color: rgba(0, 0, 0, 0.25);
+        color: #34d399;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-sm);
+        font-family: monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        margin-top: 0.5rem;
+        border: 1px solid var(--border-color);
+    }
+    .data-table {
+        background-color: rgba(0, 0, 0, 0.15);
+        color: var(--text-white);
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-sm);
+        font-family: monospace;
+        font-size: 0.85rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        margin-top: 0.5rem;
+        border: 1px solid var(--border-color);
+    }
+    .nav-item-link {
+        text-decoration: none;
+        width: 100%;
+        display: block;
+    }
+    .assistant-pill-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #e2e8f0;
+        padding: 0.45rem 0.95rem;
+        border-radius: 50px;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-weight: 500;
+    }
+    .assistant-pill-btn:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: rgba(99, 102, 241, 0.5);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+    .chat-bubble-user {
+        align-self: flex-end;
+        background: linear-gradient(135deg, #4f46e5, #6366f1);
+        color: #fff;
+        padding: 0.75rem 1.1rem;
+        border-radius: 14px;
+        border-bottom-right-radius: 2px;
+        max-width: 80%;
+        font-size: 0.9rem;
+        line-height: 1.45;
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+        word-break: break-word;
+    }
+    .chat-bubble-assistant {
+        align-self: flex-start;
+        display: flex;
+        gap: 0.75rem;
+        max-width: 92%;
+    }
+    .assistant-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: #fff;
+        font-size: 0.85rem;
+        margin-top: 2px;
+    }
+    .assistant-content {
+        background: #1e293b;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        border-top-left-radius: 2px;
+        padding: 0.9rem 1.15rem;
+        color: #e2e8f0;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        word-break: break-word;
+    }
+    .grounded-match-badge {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .grounded-product-card {
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        border-radius: 10px;
+        padding: 0.9rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+    }
+    .grounded-product-card:hover {
+        border-color: rgba(99, 102, 241, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-logo" style="margin-bottom: 0.25rem;">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span>ShopSense</span>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--primary-color); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding-left: 0.5rem; margin-bottom: 2rem;">
+            Vendor Portal
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="/vendor/dashboard#dashboard-view" class="nav-item-link">
+                <button class="nav-item" type="button">
+                    <i class="fa-solid fa-chart-line"></i>
+                    Dashboard
+                </button>
+            </a>
+            <a href="/vendor/dashboard#my-catalog-view" class="nav-item-link">
+                <button class="nav-item" type="button">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    My Catalog
+                </button>
+            </a>
+            <a href="/vendor/dashboard#add-product-view" class="nav-item-link">
+                <button class="nav-item" type="button">
+                    <i class="fa-solid fa-square-plus"></i>
+                    Add Product
+                </button>
+            </a>
+            <a href="/vendor/dashboard#insights-view" class="nav-item-link">
+                <button class="nav-item" type="button">
+                    <i class="fa-solid fa-circle-nodes"></i>
+                    Insights
+                </button>
+            </a>
+            <a href="/vendor/dashboard#reports-view" class="nav-item-link">
+                <button class="nav-item" type="button">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    Reports
+                </button>
+            </a>
+            <a href="/vendor/ai-analyst" class="nav-item-link">
+                <button class="nav-item active" type="button">
+                    <i class="fa-solid fa-brain"></i>
+                    AI Data Analyst
+                </button>
+            </a>
+            <a href="/vendor/dashboard#profile-view" class="nav-item-link">
+                <button class="nav-item" type="button">
+                    <i class="fa-solid fa-id-card"></i>
+                    Profile
+                </button>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="/logout" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Log Out
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="ai-container">
+            <div class="content-header">
+                <h1 class="page-title">🧠 AI Data Analyst</h1>
+                <p class="page-subtitle" style="color: var(--text-white); font-weight: 500; font-size: 1.1rem; margin-top: 0.35rem;">
+                    Ask questions about your sales data using natural language.
+                </p>
+            </div>
+
+            <!-- Question input card -->
+            <div class="query-box">
+                <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-white);">
+                    Ask a question about your products or transactions
+                </div>
+                <textarea id="ai-question" class="form-control" rows="4" 
+                    placeholder="e.g., What are my total sales? or Which product sold the most? or Why did my sales drop last week?"
+                    style="width: 100%; padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background-color: rgba(255,255,255,0.02); color: var(--text-white); margin-bottom: 1rem; resize: vertical; font-family: inherit; font-size: 0.95rem;"></textarea>
+                
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <button id="ask-btn" class="btn btn-primary" onclick="submitAIQuestion()" style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.65rem 1.25rem; font-weight: 600;">
+                        <i class="fa-solid fa-paper-plane"></i> Ask AI
+                    </button>
+                    <button class="btn btn-outline" onclick="setExampleQuestion('What are my total sales?')" style="font-size: 0.85rem; padding: 0.5rem 0.85rem; cursor: pointer;">
+                        Total Sales?
+                    </button>
+                    <button class="btn btn-outline" onclick="setExampleQuestion('Which product sold the most?')" style="font-size: 0.85rem; padding: 0.5rem 0.85rem; cursor: pointer;">
+                        Best Selling Product?
+                    </button>
+                    <button class="btn btn-outline" onclick="setExampleQuestion('Why did my sales drop last week?')" style="font-size: 0.85rem; padding: 0.5rem 0.85rem; cursor: pointer;">
+                        Why Sales Dropped?
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loader spinner card -->
+            <div id="ai-loading" class="loader-box">
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                <p style="color: var(--text-white); font-weight: 500; margin: 0;">Analyzing database metrics and generating response...</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem;">This may take a few seconds.</p>
+            </div>
+
+            <!-- Error alert box -->
+            <div id="ai-error" class="error-box">
+                <div style="display: flex; align-items: center; gap: 0.75rem; color: var(--danger); font-weight: 700; margin-bottom: 0.5rem; font-size: 1.05rem;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Analysis Error
+                </div>
+                <p id="ai-error-message" style="color: var(--text-white); font-size: 0.95rem; margin: 0; line-height: 1.5;"></p>
+            </div>
+
+            <!-- Result answer card -->
+            <div id="ai-result" class="response-box">
+                <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-robot"></i> AI Analyst Response
+                </div>
+                <div id="ai-answer" style="color: var(--text-white); font-size: 1.05rem; line-height: 1.6; margin-bottom: 1.5rem; white-space: pre-wrap;"></div>
+                
+                <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+                    <button class="btn btn-outline" onclick="toggleSQLDetails()" style="font-size: 0.85rem; padding: 0.35rem 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <i class="fa-solid fa-code"></i> Show/Hide Query Details
+                    </button>
+                    <div id="sql-details" class="sql-drawer">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 0.25rem; letter-spacing: 0.05em;">Generated SQL Query</div>
+                        <pre class="sql-code"><code id="ai-sql"></code></pre>
+                        
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-top: 1rem; margin-bottom: 0.25rem; letter-spacing: 0.05em;">Query Result Data</div>
+                        <pre class="data-table"><code id="ai-data"></code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RAG-POWERED AI SHOPPING ASSISTANT SECTION -->
+            <div class="query-box" style="margin-top: 1rem; border: 1px solid rgba(99, 102, 241, 0.35); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25); border-radius: var(--radius-md); overflow: hidden; padding: 0;">
+                <div class="section-title-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.1)); padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--border-color);">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span style="font-size: 1.25rem;">🛍️</span>
+                            <span style="font-size: 1.15rem; font-weight: 700; color: #fff;">AI Shopping Assistant</span>
+                        </div>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #94a3b8;">
+                            RAG-Powered Grounded Product Recommendations
+                        </p>
+                    </div>
+                    <span class="badge" style="background-color: rgba(99, 102, 241, 0.25); color: #c7d2fe; border: 1px solid rgba(99, 102, 241, 0.4); padding: 0.35rem 0.75rem; font-size: 0.75rem; font-weight: 700; border-radius: 4px;">
+                        <i class="fa-solid fa-shield-halved" style="color: #818cf8; margin-right: 0.35rem;"></i> Live RAG Catalog
+                    </span>
+                </div>
+
+                <div style="padding: 1.5rem;">
+                    <!-- Suggested Questions Pills -->
+                    <div style="margin-bottom: 1.25rem;">
+                        <span style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.6rem;">
+                            Suggested Questions
+                        </span>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.6rem;">
+                            <button class="assistant-pill-btn" onclick="askShoppingAssistant('Best keyboard for gaming')">
+                                <i class="fa-solid fa-keyboard" style="color: #818cf8;"></i> Best keyboard for gaming
+                            </button>
+                            <button class="assistant-pill-btn" onclick="askShoppingAssistant('What electronics are available under ₹500?')">
+                                <i class="fa-solid fa-tag" style="color: #34d399;"></i> What electronics are available under ₹500?
+                            </button>
+                            <button class="assistant-pill-btn" onclick="askShoppingAssistant('Top recommended products')">
+                                <i class="fa-solid fa-star" style="color: #fbbf24;"></i> Top recommended products
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Chat Message Area -->
+                    <div id="shoppingChatContainer" style="height: 380px; overflow-y: auto; background: rgba(15, 23, 42, 0.65); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem; display: flex; flex-direction: column; gap: 1.1rem; margin-bottom: 1rem;">
+                        <!-- Initial Greeting -->
+                        <div class="chat-bubble-assistant">
+                            <div class="assistant-avatar">
+                                <i class="fa-solid fa-robot"></i>
+                            </div>
+                            <div class="assistant-content">
+                                Hello! I am your <strong>AI Shopping Assistant</strong> powered by real-time RAG (Retrieval-Augmented Generation). Ask me for recommendations or questions about products in the catalog, and I will provide answers strictly grounded in actual catalog data.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loading / Grounding Status Bar -->
+                    <div id="shoppingChatLoading" style="display: none; align-items: center; gap: 0.65rem; color: #818cf8; font-size: 0.88rem; margin-bottom: 1rem; padding: 0.65rem 0.9rem; background: rgba(99, 102, 241, 0.12); border-radius: 6px; border: 1px dashed rgba(99, 102, 241, 0.35);">
+                        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 1rem;"></i>
+                        <span style="font-weight: 500;">Retrieving relevant products and grounding response...</span>
+                    </div>
+
+                    <!-- Input Bar -->
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <input type="text" id="shoppingAssistantInput" placeholder="Ask a product question (e.g. Best keyboard for gaming)..." style="flex: 1; padding: 0.8rem 1.1rem; background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: #fff; font-size: 0.9rem; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='var(--border-color)'" onkeydown="if(event.key === 'Enter') submitShoppingAssistantQuestion()">
+                        <button id="sendShoppingAssistantBtn" onclick="submitShoppingAssistantQuestion()" class="btn btn-primary" style="padding: 0.8rem 1.5rem; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; white-space: nowrap; cursor: pointer;">
+                            <i class="fa-solid fa-paper-plane"></i> Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function setExampleQuestion(txt) {
+        document.getElementById("ai-question").value = txt;
+    }
+
+    function toggleSQLDetails() {
+        const drawer = document.getElementById("sql-details");
+        if (drawer.style.display === "block") {
+            drawer.style.display = "none";
+        } else {
+            drawer.style.display = "block";
+        }
+    }
+
+    async function submitAIQuestion() {
+        const questionText = document.getElementById("ai-question").value.trim();
+        if (!questionText) {
+            alert("Please enter a question.");
+            return;
+        }
+
+        const loader = document.getElementById("ai-loading");
+        const errBox = document.getElementById("ai-error");
+        const resBox = document.getElementById("ai-result");
+        const askBtn = document.getElementById("ask-btn");
+
+        // Set loading states
+        loader.style.display = "block";
+        errBox.style.display = "none";
+        resBox.style.display = "none";
+        askBtn.disabled = true;
+
+        try {
+            const response = await fetch("/vendor/api/ai-query", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ question: questionText })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Request failed with status " + response.status);
+            }
+
+            if (data.status === "error") {
+                throw new Error(data.message || "An unknown error occurred.");
+            }
+
+            // Render output
+            document.getElementById("ai-answer").textContent = data.answer;
+            document.getElementById("ai-sql").textContent = data.sql || "N/A";
+            document.getElementById("ai-data").textContent = data.data ? JSON.stringify(data.data, null, 2) : "[]";
+
+            resBox.style.display = "block";
+        } catch (err) {
+            document.getElementById("ai-error-message").textContent = err.message;
+            errBox.style.display = "block";
+        } finally {
+            loader.style.display = "none";
+            askBtn.disabled = false;
+        }
+    }
+
+    // -------------------------------------------------------------
+    // RAG AI Shopping Assistant Handler
+    // -------------------------------------------------------------
+    function askShoppingAssistant(promptText) {
+        const input = document.getElementById("shoppingAssistantInput");
+        if (input) {
+            input.value = promptText;
+            submitShoppingAssistantQuestion();
+        }
+    }
+
+    async function submitShoppingAssistantQuestion() {
+        const input = document.getElementById("shoppingAssistantInput");
+        const sendBtn = document.getElementById("sendShoppingAssistantBtn");
+        const container = document.getElementById("shoppingChatContainer");
+        const loadingIndicator = document.getElementById("shoppingChatLoading");
+
+        if (!input || !container) return;
+        const question = input.value.trim();
+        if (!question) return;
+
+        // Append User Message Bubble
+        const userMsgEl = document.createElement("div");
+        userMsgEl.className = "chat-bubble-user";
+        userMsgEl.textContent = question;
+        container.appendChild(userMsgEl);
+
+        // Clear input and disable
+        input.value = "";
+        input.disabled = true;
+        if (sendBtn) sendBtn.disabled = true;
+        if (loadingIndicator) loadingIndicator.style.display = "flex";
+        container.scrollTop = container.scrollHeight;
+
+        try {
+            const response = await fetch("/vendor/api/shopping-assistant", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ question: question })
+            });
+
+            const data = await response.json();
+
+            // Create Assistant Message Element
+            const assistantMsgEl = document.createElement("div");
+            assistantMsgEl.className = "chat-bubble-assistant";
+
+            const avatarEl = document.createElement("div");
+            avatarEl.className = "assistant-avatar";
+            avatarEl.innerHTML = '<i class="fa-solid fa-robot"></i>';
+            assistantMsgEl.appendChild(avatarEl);
+
+            const contentEl = document.createElement("div");
+            contentEl.className = "assistant-content";
+
+            // Format answer text (support line breaks and bold formatting)
+            let formattedAnswer = (data.answer || data.message || "No answer received.")
+                .replace(/\n/g, "<br>")
+                .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+            contentEl.innerHTML = `<div>${formattedAnswer}</div>`;
+
+            // If matched grounded products exist, render product cards
+            if (data.matched_products && data.matched_products.length > 0) {
+                const cardsContainer = document.createElement("div");
+                cardsContainer.style.cssText = "display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.75rem; margin-top: 0.85rem;";
+
+                data.matched_products.forEach(prod => {
+                    const card = document.createElement("div");
+                    card.className = "grounded-product-card";
+                    card.innerHTML = `
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.35rem;">
+                                <span style="font-weight: 700; color: #f8fafc; font-size: 0.88rem; line-height: 1.3;">${escapeHtml(prod.name)}</span>
+                                <span class="grounded-match-badge">
+                                    <i class="fa-solid fa-shield-halved"></i> Grounded Match
+                                </span>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #818cf8; font-weight: 600; margin-bottom: 0.35rem;">
+                                ${escapeHtml(prod.category || 'General')}
+                            </div>
+                            <p style="font-size: 0.78rem; color: #94a3b8; margin: 0 0 0.5rem 0; line-height: 1.35; max-height: 3.8em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                                ${escapeHtml(prod.description || 'Verified catalog item.')}
+                            </p>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 0.5rem; margin-top: 0.4rem;">
+                            <span style="font-size: 1rem; font-weight: 700; color: #38bdf8;">₹${Number(prod.price).toFixed(2)}</span>
+                            <span style="font-size: 0.75rem; color: ${prod.stock > 0 ? '#34d399' : '#f87171'}; font-weight: 600;">
+                                ${prod.stock > 0 ? `${prod.stock} in stock` : 'Out of stock'}
+                            </span>
+                        </div>
+                    `;
+                    cardsContainer.appendChild(card);
+                });
+                contentEl.appendChild(cardsContainer);
+            }
+
+            assistantMsgEl.appendChild(contentEl);
+            container.appendChild(assistantMsgEl);
+
+        } catch (err) {
+            const errEl = document.createElement("div");
+            errEl.className = "chat-bubble-assistant";
+            errEl.innerHTML = `
+                <div class="assistant-avatar" style="background: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="assistant-content" style="border-color: rgba(239, 68, 68, 0.3);">
+                    I encountered an error connecting to the shopping assistant. Please try again.
+                </div>
+            `;
+            container.appendChild(errEl);
+        } finally {
+            if (loadingIndicator) loadingIndicator.style.display = "none";
+            input.disabled = false;
+            if (sendBtn) sendBtn.disabled = false;
+            input.focus();
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return "";
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+</script>
+{% endblock %}
