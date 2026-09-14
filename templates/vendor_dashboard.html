@@ -75,36 +75,36 @@
             
             <!-- Summary Cards -->
             <div id="dashboard-metrics-grid" class="metrics-grid">
-                <!-- Card 1: Total Sales -->
+                <!-- Card 1: Total Orders -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-pending">
+                        <i class="fa-solid fa-boxes-packing"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Total Orders</span>
+                        <span class="metric-value" id="dashboard-total-orders">{{ metrics.total_orders }}</span>
+                    </div>
+                </div>
+                
+                <!-- Card 2: Completed Orders -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-approved">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Completed Orders</span>
+                        <span class="metric-value" id="dashboard-completed-orders">{{ metrics.completed_orders }}</span>
+                    </div>
+                </div>
+                
+                <!-- Card 3: Total Sales -->
                 <div class="metric-card">
                     <div class="metric-icon-box icon-total">
                         <i class="fa-solid fa-cart-shopping"></i>
                     </div>
                     <div class="metric-info">
                         <span class="metric-label">Total Sales</span>
-                        <span class="metric-value">{{ metrics.total_sales }}</span>
-                    </div>
-                </div>
-                
-                <!-- Card 2: Total Revenue -->
-                <div class="metric-card">
-                    <div class="metric-icon-box icon-approved">
-                        <i class="fa-solid fa-sack-dollar"></i>
-                    </div>
-                    <div class="metric-info">
-                        <span class="metric-label">Total Revenue</span>
-                        <span class="metric-value">${{ "%.2f"|format(metrics.total_revenue) }}</span>
-                    </div>
-                </div>
-                
-                <!-- Card 3: Total Transactions -->
-                <div class="metric-card">
-                    <div class="metric-icon-box icon-pending">
-                        <i class="fa-solid fa-receipt"></i>
-                    </div>
-                    <div class="metric-info">
-                        <span class="metric-label">Total Transactions</span>
-                        <span class="metric-value">{{ metrics.total_transactions }}</span>
+                        <span class="metric-value" id="dashboard-total-sales">₹{{ "{:,.2f}".format(metrics.total_revenue) }}</span>
                     </div>
                 </div>
                 
@@ -115,7 +115,7 @@
                     </div>
                     <div class="metric-info">
                         <span class="metric-label">Products Listed</span>
-                        <span class="metric-value">{{ metrics.products_listed }}</span>
+                        <span class="metric-value" id="dashboard-products-listed">{{ metrics.products_listed }}</span>
                     </div>
                 </div>
             </div>
@@ -363,7 +363,7 @@
             </div>
 
             <!-- Summary Cards (4 in one row) -->
-            <div class="metrics-grid" style="margin-bottom: 2rem;">
+            <div id="insights-metrics-grid" class="metrics-grid" style="margin-bottom: 2rem;">
                 <!-- Total Orders -->
                 <div class="metric-card">
                     <div class="metric-icon-box" style="background-color: rgba(99, 102, 241, 0.15); color: #818cf8;">
@@ -371,7 +371,7 @@
                     </div>
                     <div class="metric-info">
                         <span class="metric-label">Total Orders</span>
-                        <span class="metric-value">1,248</span>
+                        <span class="metric-value" id="insights-total-orders">{{ metrics.total_orders }}</span>
                     </div>
                 </div>
 
@@ -382,7 +382,18 @@
                     </div>
                     <div class="metric-info">
                         <span class="metric-label">Completed Orders</span>
-                        <span class="metric-value">1,120</span>
+                        <span class="metric-value" id="insights-completed-orders">{{ metrics.completed_orders }}</span>
+                    </div>
+                </div>
+
+                <!-- Total Sales -->
+                <div class="metric-card">
+                    <div class="metric-icon-box icon-total">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Total Sales</span>
+                        <span class="metric-value" id="insights-total-sales">₹{{ "{:,.2f}".format(metrics.total_revenue) }}</span>
                     </div>
                 </div>
 
@@ -393,18 +404,7 @@
                     </div>
                     <div class="metric-info">
                         <span class="metric-label">Pending Orders</span>
-                        <span class="metric-value">96</span>
-                    </div>
-                </div>
-
-                <!-- Cancelled Orders -->
-                <div class="metric-card">
-                    <div class="metric-icon-box icon-suspended">
-                        <i class="fa-solid fa-circle-xmark"></i>
-                    </div>
-                    <div class="metric-info">
-                        <span class="metric-label">Cancelled Orders</span>
-                        <span class="metric-value">32</span>
+                        <span class="metric-value" id="insights-pending-orders">{{ metrics.pending_orders }}</span>
                     </div>
                 </div>
             </div>
@@ -438,31 +438,21 @@
                                 <th>Sales / Revenue</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>Pro Wireless Headphones X2</strong></td>
-                                <td><span class="badge" style="background-color: #1c2438; color: var(--text-main);">Electronics</span></td>
-                                <td style="font-weight: 500;">450 units</td>
-                                <td style="font-weight: 600; color: var(--success);">$67,495.50</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Ergonomic Office Mesh Chair</strong></td>
-                                <td><span class="badge" style="background-color: #1c2438; color: var(--text-main);">Home & Kitchen</span></td>
-                                <td style="font-weight: 500;">280 units</td>
-                                <td style="font-weight: 600; color: var(--success);">$55,720.00</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Waterproof Trail Running Shoes</strong></td>
-                                <td><span class="badge" style="background-color: #1c2438; color: var(--text-main);">Sports & Outdoors</span></td>
-                                <td style="font-weight: 500;">210 units</td>
-                                <td style="font-weight: 600; color: var(--success);">$27,090.00</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Minimalist Leather Wallet</strong></td>
-                                <td><span class="badge" style="background-color: #1c2438; color: var(--text-main);">Apparel</span></td>
-                                <td style="font-weight: 500;">185 units</td>
-                                <td style="font-weight: 600; color: var(--success);">$8,325.00</td>
-                            </tr>
+                        <tbody id="bestSellingProductsTableBody">
+                            {% if best_selling_products %}
+                                {% for b in best_selling_products %}
+                                <tr>
+                                    <td><strong>{{ b.name }}</strong></td>
+                                    <td><span class="badge" style="background-color: #1c2438; color: var(--text-main);">{{ b.category }}</span></td>
+                                    <td style="font-weight: 500;">{{ b.units_sold }} units</td>
+                                    <td style="font-weight: 600; color: var(--success);">₹{{ "%.2f"|format(b.total_sales) }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No sales recorded yet.</td>
+                                </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>
@@ -1352,6 +1342,18 @@
                 metricsGrid.innerHTML = docMetricsGrid.innerHTML;
             }
 
+            const insightsMetricsGrid = document.getElementById("insights-metrics-grid");
+            const docInsightsMetricsGrid = doc.getElementById("insights-metrics-grid");
+            if (insightsMetricsGrid && docInsightsMetricsGrid) {
+                insightsMetricsGrid.innerHTML = docInsightsMetricsGrid.innerHTML;
+            }
+
+            const bestSellingBody = document.getElementById("bestSellingProductsTableBody");
+            const docBestSellingBody = doc.getElementById("bestSellingProductsTableBody");
+            if (bestSellingBody && docBestSellingBody) {
+                bestSellingBody.innerHTML = docBestSellingBody.innerHTML;
+            }
+
             const benchmarkingContainer = document.getElementById("benchmarking-section-container");
             const docBenchmarkingContainer = doc.getElementById("benchmarking-section-container");
             if (benchmarkingContainer && docBenchmarkingContainer) {
@@ -1394,6 +1396,23 @@
         }
     }
 
+    function updateMetricElements(m) {
+        if (!m) return;
+        const totalOrdersEls = document.querySelectorAll("#dashboard-total-orders, #insights-total-orders");
+        totalOrdersEls.forEach(el => el.textContent = m.total_orders);
+
+        const completedOrdersEls = document.querySelectorAll("#dashboard-completed-orders, #insights-completed-orders");
+        completedOrdersEls.forEach(el => el.textContent = m.completed_orders);
+
+        const totalSalesEls = document.querySelectorAll("#dashboard-total-sales, #insights-total-sales");
+        totalSalesEls.forEach(el => el.textContent = m.total_revenue_formatted || ("₹" + Number(m.total_revenue).toFixed(2)));
+
+        const pendingOrdersEls = document.querySelectorAll("#insights-pending-orders");
+        pendingOrdersEls.forEach(el => {
+            if (m.pending_orders !== undefined) el.textContent = m.pending_orders;
+        });
+    }
+
     let ws = null;
     let reconnectTimeout = null;
 
@@ -1420,7 +1439,11 @@
             try {
                 const data = JSON.parse(event.data);
                 logToServer("Real-time sync event received: " + data.event);
+                if (data.metrics) {
+                    updateMetricElements(data.metrics);
+                }
                 syncDashboardData();
+                showToast("New sales transaction received! Dashboard updated in real-time.");
             } catch (err) {
                 logToServer("Error processing WebSocket message: " + err.message);
             }

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}ShopSense - Sign In{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container">
+        
+        <!-- Logo and header -->
+        <div class="auth-header">
+            <div class="logo-wrapper">
+                <i class="fa-solid fa-bag-shopping logo-icon"></i>
+                <span class="logo-text">ShopSense</span>
+            </div>
+            <h1 class="auth-title">Sign in to your account</h1>
+            <p class="auth-subtitle" style="margin-top: 0.25rem;">Choose your role</p>
+        </div>
+
+        <!-- Error banner -->
+        <div class="error-message" id="errorMessage" {% if error %}style="display: flex;"{% endif %}>
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="errorText">{% if error %}{{ error }}{% endif %}</span>
+        </div>
+
+        <form action="/login" method="POST" id="loginForm" onsubmit="return validateLoginForm(event)">
+            <!-- Hidden Role Input -->
+            <input type="hidden" name="role" id="roleInput" value="vendor">
+
+            <!-- Role Selector -->
+            <div class="role-selector-container" style="margin-bottom: 2rem;">
+                <div class="role-buttons">
+                    <button type="button" class="role-btn active" id="vendorRoleBtn" onclick="selectRole('vendor', true)">
+                        <i class="fa-solid fa-shop" style="margin-right: 0.5rem;"></i>Vendor Login
+                    </button>
+                    <button type="button" class="role-btn" id="adminRoleBtn" onclick="selectRole('admin', true)">
+                        <i class="fa-solid fa-user-shield" style="margin-right: 0.5rem;"></i>Admin Login
+                    </button>
+                </div>
+            </div>
+
+            <!-- Email Field -->
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="email" class="form-label">Email Address</label>
+                <div class="input-icon-container">
+                    <i class="fa-solid fa-envelope input-left-icon"></i>
+                    <input type="email" name="email" id="email" class="form-control has-left-icon" placeholder="email@example.com" value="" autocomplete="off" required>
+                </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-icon-container password-container">
+                    <i class="fa-solid fa-lock input-left-icon"></i>
+                    <input type="password" name="password" id="password" class="form-control has-left-icon" minlength="6" autocomplete="off" required>
+                    <button type="button" class="password-toggle" data-target="password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+                Sign in as Vendor <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left: 0.5rem;"></i>
+            </button>
+        </form>
+
+        <!-- Footer -->
+        <div class="auth-footer" id="registerFooter" style="margin-top: 2rem;">
+            <span>New Vendor? <a href="/register" style="font-weight: 500;">Register here</a></span>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Handle switching roles
+    function selectRole(role, isUserClick = false) {
+        const vendorBtn = document.getElementById("vendorRoleBtn");
+        const adminBtn = document.getElementById("adminRoleBtn");
+        const roleInput = document.getElementById("roleInput");
+        const submitBtn = document.getElementById("submitBtn");
+
+        // Clear existing errors on role switch only if clicked by user
+        if (isUserClick) {
+            clearError();
+        }
+
+        if (role === "vendor") {
+            vendorBtn.classList.add("active");
+            adminBtn.classList.remove("active");
+            roleInput.value = "vendor";
+            submitBtn.innerHTML = 'Sign in as Vendor <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left: 0.5rem;"></i>';
+        } else {
+            adminBtn.classList.add("active");
+            vendorBtn.classList.remove("active");
+            roleInput.value = "admin";
+            submitBtn.innerHTML = 'Sign in as Admin <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left: 0.5rem;"></i>';
+        }
+    }
+
+    // Client-side form validation
+    function validateLoginForm(event) {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        // Specific error messages
+        if (!email) {
+            showError("Please enter your email address.");
+            event.preventDefault();
+            return false;
+        }
+
+        if (!password) {
+            showError("Please enter your password.");
+            event.preventDefault();
+            return false;
+        }
+
+        if (password.length < 6) {
+            showError("Password must be at least 6 characters.");
+            event.preventDefault();
+            return false;
+        }
+
+        return true;
+    }
+
+    // Set role state based on backend response if needed
+    document.addEventListener("DOMContentLoaded", () => {
+        const initialRole = "{{ role or 'vendor' }}";
+        selectRole(initialRole, false);
+
+        // Clear any old/cached error or inputs if the page was loaded in GET (non-error) state
+        const hasServerError = {% if error %}true{% else %}false{% endif %};
+        if (!hasServerError) {
+            clearError();
+            const emailInput = document.getElementById("email");
+            const passwordInput = document.getElementById("password");
+            if (emailInput) emailInput.value = "";
+            if (passwordInput) passwordInput.value = "";
+        }
+    });
+
+    // Run cleanups on pageshow to catch bfcache (Back/Forward navigation) loads
+    window.addEventListener("pageshow", (event) => {
+        const hasServerError = {% if error %}true{% else %}false{% endif %};
+        if (event.persisted && !hasServerError) {
+            clearError();
+            const emailInput = document.getElementById("email");
+            const passwordInput = document.getElementById("password");
+            if (emailInput) emailInput.value = "";
+            if (passwordInput) passwordInput.value = "";
+        }
+    });
+</script>
+{% endblock %}
