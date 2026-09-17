@@ -1,0 +1,557 @@
+{% extends "base.html" %}
+
+{% block title %}ShopSense - {{ product.name }}{% endblock %}
+
+{% block head %}
+<style>
+    .customer-portal-layout {
+        min-height: 100vh;
+        background: radial-gradient(circle at 15% 15%, #180d07 0%, #09090b 60%, #030304 100%);
+        color: var(--text-main);
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Top Navigation Bar */
+    .portal-navbar {
+        background-color: rgba(18, 18, 21, 0.9);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.9rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .brand-section {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-decoration: none;
+    }
+
+    .brand-logo-icon {
+        color: var(--primary-color);
+        font-size: 1.6rem;
+    }
+
+    .brand-title {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--text-white);
+        letter-spacing: -0.5px;
+    }
+
+    .brand-badge {
+        background: rgba(249, 115, 22, 0.15);
+        color: var(--primary-color);
+        border: 1px solid rgba(249, 115, 22, 0.35);
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.2rem 0.55rem;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .user-nav-section {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+    }
+
+    .customer-pill {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-color);
+        padding: 0.35rem 0.85rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+    }
+
+    .customer-avatar {
+        width: 28px;
+        height: 28px;
+        background: linear-gradient(135deg, var(--primary-color), #ea580c);
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .back-nav-link {
+        color: var(--text-white);
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 1rem;
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+    .back-nav-link:hover {
+        background: rgba(249, 115, 22, 0.15);
+        border-color: rgba(249, 115, 22, 0.3);
+        color: var(--primary-color);
+    }
+
+    /* Product Details Container */
+    .detail-container {
+        max-width: 1100px;
+        margin: 2.5rem auto;
+        padding: 0 1.5rem;
+        width: 100%;
+    }
+
+    .detail-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+        display: grid;
+        grid-template-columns: 1fr 1.15fr;
+        gap: 2.5rem;
+        overflow: hidden;
+        padding: 2.5rem;
+    }
+
+    @media (max-width: 850px) {
+        .detail-card {
+            grid-template-columns: 1fr;
+            padding: 1.5rem;
+            gap: 1.75rem;
+        }
+    }
+
+    .product-media {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .main-image-wrapper {
+        width: 100%;
+        height: 380px;
+        background: #18181b;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .main-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .placeholder-large {
+        font-size: 4.5rem;
+        color: #52525b;
+    }
+
+    .product-info-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .category-badge-lg {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(249, 115, 22, 0.12);
+        color: var(--primary-color);
+        border: 1px solid rgba(249, 115, 22, 0.25);
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.3rem 0.75rem;
+        border-radius: 50px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        width: fit-content;
+    }
+
+    .product-title-lg {
+        font-size: 1.85rem;
+        font-weight: 800;
+        color: var(--text-white);
+        line-height: 1.25;
+    }
+
+    .product-price-section {
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .product-unit-price {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary-color);
+    }
+
+    .product-stock-tag {
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.35rem 0.75rem;
+        border-radius: 4px;
+    }
+
+    .stock-tag-available {
+        background: rgba(16, 185, 129, 0.12);
+        color: var(--success);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .stock-tag-out {
+        background: rgba(239, 68, 68, 0.12);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .product-desc-box {
+        color: #d4d4d8;
+        font-size: 0.95rem;
+        line-height: 1.65;
+    }
+
+    .product-desc-box h4 {
+        color: var(--text-white);
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Order Card Box */
+    .order-config-box {
+        background: #18181b;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .quantity-control-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .quantity-label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-white);
+    }
+
+    .quantity-stepper {
+        display: flex;
+        align-items: center;
+        background: #09090b;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+    }
+
+    .stepper-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-white);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    .stepper-btn:hover:not(:disabled) {
+        background: rgba(249, 115, 22, 0.2);
+        color: var(--primary-color);
+    }
+
+    .stepper-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    .quantity-input {
+        width: 55px;
+        height: 40px;
+        text-align: center;
+        background: transparent;
+        border: none;
+        color: var(--text-white);
+        font-size: 1.05rem;
+        font-weight: 700;
+        outline: none;
+    }
+
+    .total-calculation-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .total-label {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .total-amount-display {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--text-white);
+    }
+
+    .btn-place-order {
+        background: linear-gradient(135deg, var(--primary-color), #ea580c);
+        color: #fff;
+        border: none;
+        padding: 0.9rem 1.5rem;
+        border-radius: var(--radius-sm);
+        font-size: 1.05rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35);
+        width: 100%;
+    }
+
+    .btn-place-order:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(249, 115, 22, 0.5);
+    }
+
+    .btn-place-order:disabled {
+        background: #3f3f46;
+        cursor: not-allowed;
+        box-shadow: none;
+        color: #a1a1aa;
+    }
+
+    .error-alert-box {
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.88rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="customer-portal-layout">
+
+    <!-- Top Navigation Bar -->
+    <header class="portal-navbar">
+        <div style="display: flex; align-items: center; gap: 1.5rem;">
+            <a href="/customer/portal" class="brand-section">
+                <i class="fa-solid fa-bag-shopping brand-logo-icon"></i>
+                <span class="brand-title">ShopSense</span>
+                <span class="brand-badge">Customer Portal</span>
+            </a>
+            <a href="/customer/portal" class="back-nav-link">
+                <i class="fa-solid fa-arrow-left"></i> Back to Catalog
+            </a>
+        </div>
+
+        <div class="user-nav-section">
+            <div class="customer-pill">
+                <div class="customer-avatar">{{ customer.name[0] if customer and customer.name else 'C' }}</div>
+                <span style="font-weight: 600; color: var(--text-white);">{{ customer.name }}</span>
+                <span class="badge {% if customer.segment == 'Premium Customer' %}badge-premium-customer{% elif customer.segment == 'Regular Customer' %}badge-regular-customer{% else %}badge-new-customer{% endif %}" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
+                    {{ customer.segment }}
+                </span>
+            </div>
+            <a href="/logout" class="back-nav-link" style="color: var(--danger);">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+            </a>
+        </div>
+    </header>
+
+    <!-- Product Details Content -->
+    <main class="detail-container">
+        <div class="detail-card">
+            
+            <!-- Left: Product Media Preview -->
+            <div class="product-media">
+                <div class="main-image-wrapper">
+                    {% if product.image_url %}
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" class="main-image" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'placeholder-large\'><i class=\'fa-solid fa-box\'></i></div>';">
+                    {% else %}
+                    <div class="placeholder-large">
+                        <i class="fa-solid fa-box"></i>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Right: Product Information & Order Actions -->
+            <div class="product-info-panel">
+                <div>
+                    <span class="category-badge-lg">
+                        <i class="fa-solid fa-tag"></i> {{ product.category }}
+                    </span>
+                    <h1 class="product-title-lg" style="margin-top: 0.6rem;">{{ product.name }}</h1>
+                </div>
+
+                <div class="product-price-section">
+                    <span class="product-unit-price">$<span id="unitPriceDisplay">{{ "%.2f"|format(product.price) }}</span></span>
+                    {% if product.stock > 0 %}
+                    <span class="product-stock-tag stock-tag-available">
+                        <i class="fa-solid fa-circle-check"></i> In Stock ({{ product.stock }} available)
+                    </span>
+                    {% else %}
+                    <span class="product-stock-tag stock-tag-out">
+                        <i class="fa-solid fa-circle-xmark"></i> Out of Stock
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="product-desc-box">
+                    <h4>Product Description</h4>
+                    <p>{{ product.description or 'Premium catalog item verified by ShopSense marketplace. Fully backed by warranty and swift fulfillment.' }}</p>
+                </div>
+
+                <!-- Order Placement Form -->
+                {% if error %}
+                <div class="error-alert-box">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>{{ error }}</span>
+                </div>
+                {% endif %}
+
+                <form action="/customer/order/create" method="POST" id="orderForm" class="order-config-box" onsubmit="return validateOrder()">
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+
+                    <div class="quantity-control-group">
+                        <span class="quantity-label">Quantity:</span>
+                        <div class="quantity-stepper">
+                            <button type="button" class="stepper-btn" id="btnMinus" onclick="stepQuantity(-1)" {% if product.stock <= 0 %}disabled{% endif %}>
+                                <i class="fa-solid fa-minus"></i>
+                            </button>
+                            <input type="number" name="quantity" id="quantityInput" class="quantity-input" value="1" min="1" max="{{ product.stock }}" oninput="updateTotal()" {% if product.stock <= 0 %}disabled{% endif %}>
+                            <button type="button" class="stepper-btn" id="btnPlus" onclick="stepQuantity(1)" {% if product.stock <= 0 %}disabled{% endif %}>
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="total-calculation-row">
+                        <span class="total-label">Total Amount:</span>
+                        <span class="total-amount-display">$<span id="totalAmountDisplay">{{ "%.2f"|format(product.price) }}</span></span>
+                    </div>
+
+                    <button type="submit" class="btn-place-order" id="btnPlaceOrder" {% if product.stock <= 0 %}disabled{% endif %}>
+                        <i class="fa-solid fa-bag-shopping"></i> Place Order
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+    </main>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const unitPrice = {{ product.price }};
+    const maxStock = {{ product.stock }};
+
+    function stepQuantity(delta) {
+        const input = document.getElementById("quantityInput");
+        let currentVal = parseInt(input.value) || 1;
+        let nextVal = currentVal + delta;
+
+        if (nextVal < 1) nextVal = 1;
+        if (nextVal > maxStock) nextVal = maxStock;
+
+        input.value = nextVal;
+        updateTotal();
+    }
+
+    function updateTotal() {
+        const input = document.getElementById("quantityInput");
+        let qty = parseInt(input.value) || 1;
+
+        if (qty < 1) {
+            qty = 1;
+            input.value = 1;
+        }
+        if (qty > maxStock && maxStock > 0) {
+            qty = maxStock;
+            input.value = maxStock;
+        }
+
+        const total = (unitPrice * qty).toFixed(2);
+        document.getElementById("totalAmountDisplay").innerText = total;
+
+        // Toggle stepper buttons
+        const btnMinus = document.getElementById("btnMinus");
+        const btnPlus = document.getElementById("btnPlus");
+        if (btnMinus) btnMinus.disabled = (qty <= 1);
+        if (btnPlus) btnPlus.disabled = (qty >= maxStock);
+    }
+
+    function validateOrder() {
+        const input = document.getElementById("quantityInput");
+        const qty = parseInt(input.value) || 0;
+
+        if (maxStock <= 0) {
+            alert("This item is currently out of stock.");
+            return false;
+        }
+        if (qty <= 0) {
+            alert("Please select at least 1 unit.");
+            return false;
+        }
+        if (qty > maxStock) {
+            alert(`Cannot order more than available stock (${maxStock} units).`);
+            return false;
+        }
+        return true;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        updateTotal();
+    });
+</script>
+{% endblock %}

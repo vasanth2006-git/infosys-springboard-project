@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}ShopSense - Vendor Registration{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container" style="max-width: 560px;">
+        
+        <!-- Logo and header -->
+        <div class="auth-header">
+            <div class="logo-wrapper">
+                <i class="fa-solid fa-bag-shopping logo-icon"></i>
+                <span class="logo-text">ShopSense</span>
+            </div>
+            <h1 class="auth-title">Register as a Vendor</h1>
+            <p class="auth-subtitle">Fill in your details to apply for a vendor account.</p>
+        </div>
+
+        <!-- Success message banner -->
+        {% if success %}
+        <div class="success-message" style="display: flex; flex-direction: column; align-items: center; background-color: var(--success-bg); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.5rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; text-align: center;">
+            <i class="fa-solid fa-circle-check" style="font-size: 2.25rem; color: var(--success); margin-bottom: 0.75rem;"></i>
+            <h3 style="font-weight: 700; margin-bottom: 0.35rem; font-size: 1.25rem; color: var(--success);">Registration Successful!</h3>
+            <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem;">Your vendor account has been registered successfully.</p>
+            <a href="/logout" class="btn btn-primary" style="display: inline-flex; width: auto; padding: 0.55rem 1.25rem; font-size: 0.9rem;">Back to Login</a>
+        </div>
+        {% endif %}
+
+        <!-- Error banner -->
+        <div class="error-message" id="errorMessage" {% if error %}style="display: flex;"{% endif %}>
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="errorText">{% if error %}{{ error }}{% endif %}</span>
+        </div>
+
+        <form action="/register" method="POST" id="registerForm" onsubmit="return validateRegisterForm(event)" {% if success %}style="display: none;"{% endif %}>
+            
+            <!-- Full Name -->
+            <div class="form-group">
+                <label for="full_name" class="form-label">Full Name *</label>
+                <input type="text" name="full_name" id="full_name" class="form-control" placeholder="John Doe" value="{{ full_name or '' }}" required>
+            </div>
+
+            <!-- Business Name -->
+            <div class="form-group">
+                <label for="business_name" class="form-label">Business Name *</label>
+                <input type="text" name="business_name" id="business_name" class="form-control" placeholder="Acme Corporation" value="{{ business_name or '' }}" required>
+            </div>
+
+            <!-- Email Address -->
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address *</label>
+                <input type="email" name="email" id="email" class="form-control" placeholder="email@example.com" value="{{ email or '' }}" required>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label for="password" class="form-label">Password *</label>
+                <div class="password-container">
+                    <input type="password" name="password" id="password" class="form-control" minlength="6" placeholder="At least 6 characters" required>
+                    <button type="button" class="password-toggle" data-target="password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Phone Number (Optional) -->
+            <div class="form-group">
+                <label for="phone_number" class="form-label">Phone Number (Optional)</label>
+                <input type="tel" name="phone_number" id="phone_number" class="form-control" placeholder="+1 (555) 000-0000" value="{{ phone_number or '' }}">
+            </div>
+
+            <!-- Business Address (Optional) -->
+            <div class="form-group">
+                <label for="business_address" class="form-label">Business Address (Optional)</label>
+                <textarea name="business_address" id="business_address" class="form-control" rows="3" placeholder="Street, City, State, ZIP">{{ business_address or '' }}</textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Submit Registration</button>
+        </form>
+
+        <!-- Footer -->
+        <div class="auth-footer">
+            <span>Already have an account? <a href="/login">Sign in here</a></span>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function validateRegisterForm(event) {
+        clearError();
+        
+        const fullName = document.getElementById("full_name").value.trim();
+        const businessName = document.getElementById("business_name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        // Verify required fields
+        if (!fullName || !businessName || !email || !password) {
+            showError("Please fill in all required (*) fields.");
+            event.preventDefault();
+            return false;
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showError("Please enter a valid email address.");
+            event.preventDefault();
+            return false;
+        }
+
+        // Password length check
+        if (password.length < 6) {
+            showError("Password must be at least 6 characters.");
+            event.preventDefault();
+            return false;
+        }
+
+        return true;
+    }
+</script>
+{% endblock %}

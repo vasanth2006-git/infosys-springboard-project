@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}ShopSense - Customer Registration{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container" style="max-width: 520px;">
+        
+        <!-- Logo and header -->
+        <div class="auth-header">
+            <div class="logo-wrapper">
+                <i class="fa-solid fa-bag-shopping logo-icon"></i>
+                <span class="logo-text">ShopSense</span>
+            </div>
+            <h1 class="auth-title">Register as a Customer</h1>
+            <p class="auth-subtitle">Create your personal shopping account to explore the catalog and use the AI Shopping Assistant.</p>
+        </div>
+
+        <!-- Success message banner -->
+        {% if success %}
+        <div class="success-message" style="display: flex; flex-direction: column; align-items: center; background-color: var(--success-bg); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.5rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; text-align: center;">
+            <i class="fa-solid fa-circle-check" style="font-size: 2.25rem; color: var(--success); margin-bottom: 0.75rem;"></i>
+            <h3 style="font-weight: 700; margin-bottom: 0.35rem; font-size: 1.25rem; color: var(--success);">Registration Successful!</h3>
+            <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem;">Your customer account is ready.</p>
+            <a href="/customer/portal" class="btn btn-primary" style="display: inline-flex; width: auto; padding: 0.55rem 1.25rem; font-size: 0.9rem;">Go to Customer Portal</a>
+        </div>
+        {% endif %}
+
+        <!-- Error banner -->
+        <div class="error-message" id="errorMessage" {% if error %}style="display: flex;"{% endif %}>
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="errorText">{% if error %}{{ error }}{% endif %}</span>
+        </div>
+
+        <form action="/customer/register" method="POST" id="customerRegisterForm" onsubmit="return validateCustomerRegisterForm(event)" {% if success %}style="display: none;"{% endif %}>
+            
+            <!-- Full Name -->
+            <div class="form-group">
+                <label for="full_name" class="form-label">Full Name *</label>
+                <div class="input-icon-container">
+                    <i class="fa-solid fa-user input-left-icon"></i>
+                    <input type="text" name="full_name" id="full_name" class="form-control has-left-icon" placeholder="Alex Morgan" value="{{ full_name or '' }}" required>
+                </div>
+            </div>
+
+            <!-- Email Address -->
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address *</label>
+                <div class="input-icon-container">
+                    <i class="fa-solid fa-envelope input-left-icon"></i>
+                    <input type="email" name="email" id="email" class="form-control has-left-icon" placeholder="alex@example.com" value="{{ email or '' }}" required>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label for="password" class="form-label">Password *</label>
+                <div class="input-icon-container password-container">
+                    <i class="fa-solid fa-lock input-left-icon"></i>
+                    <input type="password" name="password" id="password" class="form-control has-left-icon" minlength="6" placeholder="At least 6 characters" required>
+                    <button type="button" class="password-toggle" data-target="password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">
+                Create Customer Account <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left: 0.5rem;"></i>
+            </button>
+        </form>
+
+        <!-- Footer -->
+        <div class="auth-footer" style="margin-top: 2rem;">
+            <span>Already have an account? <a href="/login">Sign in here</a></span>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function validateCustomerRegisterForm(event) {
+        clearError();
+        
+        const fullName = document.getElementById("full_name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        if (!fullName) {
+            showError("Full Name is required.");
+            event.preventDefault();
+            return false;
+        }
+
+        if (!email) {
+            showError("Email Address is required.");
+            event.preventDefault();
+            return false;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showError("Please enter a valid email address.");
+            event.preventDefault();
+            return false;
+        }
+
+        if (!password || password.length < 6) {
+            showError("Password must be at least 6 characters long.");
+            event.preventDefault();
+            return false;
+        }
+
+        return true;
+    }
+</script>
+{% endblock %}
