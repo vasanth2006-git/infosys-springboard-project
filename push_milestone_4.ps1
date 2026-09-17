@@ -14,12 +14,16 @@ if (-not (Test-Path "main.py")) {
     exit 1
 }
 
-# 2. Untrack debug and secret files from index if present
-Write-Host "`n[1/6] Ensuring debug logs and secrets are not tracked..." -ForegroundColor Yellow
+# 2. Untrack debug, secret, and skipped cloud files from index if present
+Write-Host "`n[1/6] Ensuring debug logs, secrets, and skipped cloud files are not tracked..." -ForegroundColor Yellow
 git rm --cached debug_log.txt 2>$null
 git rm --cached server_debug.log 2>$null
 git rm --cached .env 2>$null
 git rm --cached shopsense.db 2>$null
+git rm --cached render.yaml 2>$null
+git rm --cached render_deploy_guide.md 2>$null
+if (Test-Path "render.yaml") { Remove-Item "render.yaml" -Force -ErrorAction SilentlyContinue }
+if (Test-Path "render_deploy_guide.md") { Remove-Item "render_deploy_guide.md" -Force -ErrorAction SilentlyContinue }
 
 # 3. Stage required Milestone 4 files
 Write-Host "[2/6] Staging Milestone 4 project files..." -ForegroundColor Yellow
@@ -28,6 +32,7 @@ git add Dockerfile .dockerignore docker_verify.bat docker_verify.ps1
 git add verify_docs.bat verify_docs.ps1
 git add tests/ run_tests.bat run_tests.ps1
 git add .github/workflows/ci.yml
+git add services/ run_weekly_agent.py run_weekly_agent.bat run_weekly_agent.ps1 setup_weekly_scheduler.ps1
 
 # 4. Verify .env is NOT staged
 $staged = git status --porcelain
@@ -40,7 +45,7 @@ Write-Host "      Confirmed: No secrets or .env file staged." -ForegroundColor G
 
 # 5. Commit with message
 Write-Host "[3/6] Committing Milestone 4 changes..." -ForegroundColor Yellow
-git commit -m "Implement Milestone 4: Dockerization, API Documentation, Unit Tests, and GitHub Actions CI/CD"
+git commit -m "Implement Milestone 4: Dockerization, API Documentation, Unit Tests, CI/CD, and AI Agent Workflow (LangGraph)"
 
 # 6. Switch/create local milestone-4-completion branch pointing to this commit
 Write-Host "[4/6] Setting current branch to milestone-4-completion..." -ForegroundColor Yellow

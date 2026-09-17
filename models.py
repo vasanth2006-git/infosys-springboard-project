@@ -55,6 +55,8 @@ class Customer(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
+    email = Column(String(150), unique=True, index=True, nullable=True)
+    password_hash = Column(String(255), nullable=True)
     total_spend = Column(Float, nullable=False, default=0.0)
 
     # Future integration mapping:
@@ -73,6 +75,7 @@ class Customer(Base):
         return {
             "id": self.id,
             "name": self.name,
+            "email": self.email,
             "total_spend": self.total_spend,
             "segment": self.segment
         }

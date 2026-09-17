@@ -12,8 +12,8 @@
                 <i class="fa-solid fa-bag-shopping logo-icon"></i>
                 <span class="logo-text">ShopSense</span>
             </div>
-            <h1 class="auth-title">Sign in to your account</h1>
-            <p class="auth-subtitle" style="margin-top: 0.25rem;">Choose your role</p>
+            <h1 class="auth-title" id="authTitle">Sign in to your account</h1>
+            <p class="auth-subtitle" id="authSubtitle" style="margin-top: 0.25rem;">Choose your role</p>
         </div>
 
         <!-- Error banner -->
@@ -29,6 +29,9 @@
             <!-- Role Selector -->
             <div class="role-selector-container" style="margin-bottom: 2rem;">
                 <div class="role-buttons">
+                    <button type="button" class="role-btn" id="customerRoleBtn" onclick="selectRole('customer', true)">
+                        <i class="fa-solid fa-user" style="margin-right: 0.5rem;"></i>Customer
+                    </button>
                     <button type="button" class="role-btn active" id="vendorRoleBtn" onclick="selectRole('vendor', true)">
                         <i class="fa-solid fa-shop" style="margin-right: 0.5rem;"></i>Vendor Login
                     </button>
@@ -40,7 +43,7 @@
 
             <!-- Email Field -->
             <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label for="email" class="form-label">Email Address</label>
+                <label for="email" class="form-label" id="emailLabel">Email Address</label>
                 <div class="input-icon-container">
                     <i class="fa-solid fa-envelope input-left-icon"></i>
                     <input type="email" name="email" id="email" class="form-control has-left-icon" placeholder="email@example.com" value="" autocomplete="off" required>
@@ -49,7 +52,7 @@
 
             <!-- Password Field -->
             <div class="form-group" style="margin-bottom: 2rem;">
-                <label for="password" class="form-label">Password</label>
+                <label for="password" class="form-label" id="passwordLabel">Password</label>
                 <div class="input-icon-container password-container">
                     <i class="fa-solid fa-lock input-left-icon"></i>
                     <input type="password" name="password" id="password" class="form-control has-left-icon" minlength="6" autocomplete="off" required>
@@ -78,26 +81,68 @@
 <script>
     // Handle switching roles
     function selectRole(role, isUserClick = false) {
+        const customerBtn = document.getElementById("customerRoleBtn");
         const vendorBtn = document.getElementById("vendorRoleBtn");
         const adminBtn = document.getElementById("adminRoleBtn");
         const roleInput = document.getElementById("roleInput");
         const submitBtn = document.getElementById("submitBtn");
+        const authTitle = document.getElementById("authTitle");
+        const authSubtitle = document.getElementById("authSubtitle");
+        const emailLabel = document.getElementById("emailLabel");
+        const emailInput = document.getElementById("email");
+        const passwordLabel = document.getElementById("passwordLabel");
+        const registerFooter = document.getElementById("registerFooter");
 
         // Clear existing errors on role switch only if clicked by user
         if (isUserClick) {
             clearError();
         }
 
-        if (role === "vendor") {
-            vendorBtn.classList.add("active");
-            adminBtn.classList.remove("active");
-            roleInput.value = "vendor";
-            submitBtn.innerHTML = 'Sign in as Vendor <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left: 0.5rem;"></i>';
-        } else {
-            adminBtn.classList.add("active");
-            vendorBtn.classList.remove("active");
+        if (role === "customer") {
+            if (customerBtn) customerBtn.classList.add("active");
+            if (vendorBtn) vendorBtn.classList.remove("active");
+            if (adminBtn) adminBtn.classList.remove("active");
+            roleInput.value = "customer";
+            if (authTitle) authTitle.innerText = "Sign in to your account";
+            if (authSubtitle) authSubtitle.innerText = "Sign in as a Customer";
+            if (emailLabel) emailLabel.innerText = "Customer Email";
+            if (emailInput) emailInput.placeholder = "customer@example.com";
+            if (passwordLabel) passwordLabel.innerText = "Customer Password";
+            submitBtn.innerHTML = 'Sign in as Customer <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left: 0.5rem;"></i>';
+            if (registerFooter) {
+                registerFooter.style.display = "block";
+                registerFooter.innerHTML = '<span>New Customer? <a href="/customer/register" style="font-weight: 500;">Register as new Customer</a></span>';
+            }
+        } else if (role === "admin") {
+            if (adminBtn) adminBtn.classList.add("active");
+            if (customerBtn) customerBtn.classList.remove("active");
+            if (vendorBtn) vendorBtn.classList.remove("active");
             roleInput.value = "admin";
+            if (authTitle) authTitle.innerText = "Sign in to your account";
+            if (authSubtitle) authSubtitle.innerText = "Choose your role";
+            if (emailLabel) emailLabel.innerText = "Email Address";
+            if (emailInput) emailInput.placeholder = "email@example.com";
+            if (passwordLabel) passwordLabel.innerText = "Password";
             submitBtn.innerHTML = 'Sign in as Admin <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left: 0.5rem;"></i>';
+            if (registerFooter) {
+                registerFooter.style.display = "none";
+            }
+        } else {
+            // Default: vendor
+            if (vendorBtn) vendorBtn.classList.add("active");
+            if (customerBtn) customerBtn.classList.remove("active");
+            if (adminBtn) adminBtn.classList.remove("active");
+            roleInput.value = "vendor";
+            if (authTitle) authTitle.innerText = "Sign in to your account";
+            if (authSubtitle) authSubtitle.innerText = "Choose your role";
+            if (emailLabel) emailLabel.innerText = "Email Address";
+            if (emailInput) emailInput.placeholder = "email@example.com";
+            if (passwordLabel) passwordLabel.innerText = "Password";
+            submitBtn.innerHTML = 'Sign in as Vendor <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left: 0.5rem;"></i>';
+            if (registerFooter) {
+                registerFooter.style.display = "block";
+                registerFooter.innerHTML = '<span>New Vendor? <a href="/register" style="font-weight: 500;">Register here</a></span>';
+            }
         }
     }
 

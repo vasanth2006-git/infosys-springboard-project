@@ -15,12 +15,16 @@ if not exist "main.py" (
     exit /b 1
 )
 
-:: 2. Untrack debug and secret files from index if present
-echo [1/6] Ensuring debug logs and secrets are not tracked...
+:: 2. Untrack debug, secret, and skipped cloud files from index if present
+echo [1/6] Ensuring debug logs, secrets, and skipped cloud files are not tracked...
 git rm --cached debug_log.txt 2>nul
 git rm --cached server_debug.log 2>nul
 git rm --cached .env 2>nul
 git rm --cached shopsense.db 2>nul
+git rm --cached render.yaml 2>nul
+git rm --cached render_deploy_guide.md 2>nul
+if exist "render.yaml" del /f /q "render.yaml" 2>nul
+if exist "render_deploy_guide.md" del /f /q "render_deploy_guide.md" 2>nul
 
 :: 3. Stage required Milestone 4 files
 echo [2/6] Staging Milestone 4 project files...
@@ -29,6 +33,7 @@ git add Dockerfile .dockerignore docker_verify.bat docker_verify.ps1
 git add verify_docs.bat verify_docs.ps1
 git add tests/ run_tests.bat run_tests.ps1
 git add .github/workflows/ci.yml
+git add services/ run_weekly_agent.py run_weekly_agent.bat run_weekly_agent.ps1 setup_weekly_scheduler.ps1
 
 :: 4. Verify .env is NOT staged
 git status --porcelain | findstr "^A  \.env" >nul
@@ -42,7 +47,7 @@ echo      Confirmed: No secrets or .env file staged.
 
 :: 5. Commit with message
 echo [3/6] Committing Milestone 4 changes...
-git commit -m "Implement Milestone 4: Dockerization, API Documentation, Unit Tests, and GitHub Actions CI/CD"
+git commit -m "Implement Milestone 4: Dockerization, API Documentation, Unit Tests, CI/CD, and AI Agent Workflow (LangGraph)"
 
 :: 6. Switch/create local milestone-4-completion branch pointing to this commit
 echo [4/6] Setting current branch to milestone-4-completion...

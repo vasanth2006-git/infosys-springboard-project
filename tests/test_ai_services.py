@@ -59,7 +59,7 @@ def test_shopping_assistant_unauthorized(client):
 
 def test_shopping_assistant_success_mocked(client, approved_vendor, sample_product):
     """POST /vendor/api/shopping-assistant with matching product and mocked Gemini."""
-    mock_nl_answer = "I recommend the Pro Wireless Headphones X2 at ₹149.99 for high-fidelity audio."
+    mock_nl_answer = "I recommend the Pro Wireless Headphones X2 at $149.99 for high-fidelity audio."
 
     with patch("main.call_gemini", return_value=mock_nl_answer):
         response = client.post(

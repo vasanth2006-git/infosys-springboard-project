@@ -15,23 +15,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const eyeIcon = document.getElementById('eyeIcon');
     const passwordInput = document.getElementById('password');
 
+    const customerRoleBtn = document.getElementById('customerRoleBtn');
+
     if (roleSelector) {
         // Toggle role selection
-        vendorRoleBtn.addEventListener('click', () => {
-            vendorRoleBtn.classList.add('active');
-            adminRoleBtn.classList.remove('active');
-            selectedRoleInput.value = 'vendor';
-            submitLoginBtn.querySelector('span').textContent = 'Sign in as Vendor';
-            hideAlert();
-        });
+        if (customerRoleBtn) {
+            customerRoleBtn.addEventListener('click', () => {
+                customerRoleBtn.classList.add('active');
+                if (vendorRoleBtn) vendorRoleBtn.classList.remove('active');
+                if (adminRoleBtn) adminRoleBtn.classList.remove('active');
+                selectedRoleInput.value = 'customer';
+                submitLoginBtn.querySelector('span').textContent = 'Sign in as Customer';
+                hideAlert();
+            });
+        }
 
-        adminRoleBtn.addEventListener('click', () => {
-            adminRoleBtn.classList.add('active');
-            vendorRoleBtn.classList.remove('active');
-            selectedRoleInput.value = 'admin';
-            submitLoginBtn.querySelector('span').textContent = 'Sign in as Admin';
-            hideAlert();
-        });
+        if (vendorRoleBtn) {
+            vendorRoleBtn.addEventListener('click', () => {
+                vendorRoleBtn.classList.add('active');
+                if (customerRoleBtn) customerRoleBtn.classList.remove('active');
+                if (adminRoleBtn) adminRoleBtn.classList.remove('active');
+                selectedRoleInput.value = 'vendor';
+                submitLoginBtn.querySelector('span').textContent = 'Sign in as Vendor';
+                hideAlert();
+            });
+        }
+
+        if (adminRoleBtn) {
+            adminRoleBtn.addEventListener('click', () => {
+                adminRoleBtn.classList.add('active');
+                if (customerRoleBtn) customerRoleBtn.classList.remove('active');
+                if (vendorRoleBtn) vendorRoleBtn.classList.remove('active');
+                selectedRoleInput.value = 'admin';
+                submitLoginBtn.querySelector('span').textContent = 'Sign in as Admin';
+                hideAlert();
+            });
+        }
 
         // Eye Icon Password Toggle
         if (passwordToggle && passwordInput) {

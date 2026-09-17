@@ -16,7 +16,7 @@ from schemas import (
     MessageResponse, StatusOkResponse, CustomerResponse, ProductDetailResponse,
     SalesTrendResponse, AIQueryRequest, AIQueryResponse, ShoppingAssistantRequest,
     ShoppingAssistantResponse, TransactionCreateResponse, VerifySeedingResponse,
-    DebugDBResponse
+    DebugDBResponse, WeeklyReportResponse
 )
 
 tags_metadata = [
@@ -52,6 +52,10 @@ tags_metadata = [
         "name": "System & Diagnostics",
         "description": "Client-side diagnostic logging and database schema introspection.",
     },
+    {
+        "name": "Customer Portal & Catalog",
+        "description": "Customer authentication, self-service registration, product catalog browsing, and AI shopping assistant.",
+    },
 ]
 
 app = FastAPI(
@@ -80,6 +84,42 @@ The **ShopSense Marketplace Portal API** is a comprehensive, enterprise-grade mu
     redoc_url="/redoc",
     debug=True
 )
+
+# -------------------------------------------------------------
+# In-App Automated Weekly AI Agent Background Scheduler
+# -------------------------------------------------------------
+@app.on_event("startup")
+async def start_weekly_agent_background_worker():
+    """
+    Spawns a periodic non-blocking background task that executes the LangGraph
+    weekly business analytics and email reporting workflow on a recurring schedule.
+    """
+    weekly_enabled = os.getenv("WEEKLY_AGENT_ENABLED", "True").lower() in ("true", "1", "yes")
+    interval_days = int(os.getenv("WEEKLY_AGENT_INTERVAL_DAYS", "7"))
+
+    if not weekly_enabled:
+        log_debug_message("[WEEKLY AGENT] In-app weekly scheduler is disabled via WEEKLY_AGENT_ENABLED=False.")
+        return
+
+    async def weekly_worker_loop():
+        import asyncio
+        log_debug_message(f"[WEEKLY AGENT] In-app weekly background scheduler active (Interval: {interval_days} days).")
+        while True:
+            try:
+                # Brief initial pause to let server finish boot
+                await asyncio.sleep(15)
+                from services.agent_workflow import run_all_approved_vendors_analysis
+                log_debug_message("[WEEKLY AGENT] Starting scheduled weekly analysis for approved vendors...")
+                results = run_all_approved_vendors_analysis()
+                log_debug_message(f"[WEEKLY AGENT] Scheduled weekly analysis completed. Vendors analyzed: {len(results)}")
+            except Exception as e:
+                log_debug_message(f"[WEEKLY AGENT EXCEPTION] In worker loop: {e}")
+
+            # Sleep for configured interval (7 days = 604800 seconds)
+            await asyncio.sleep(max(interval_days, 1) * 86400)
+
+    import asyncio
+    asyncio.create_task(weekly_worker_loop())
 
 # -------------------------------------------------------------
 # WebSocket Connection Manager for Real-Time Updates
@@ -121,13 +161,19 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 # Mount static and templates directory
-# Ensure folders exist
-os.makedirs("static/css", exist_ok=True)
-os.makedirs("static/js", exist_ok=True)
-os.makedirs("templates", exist_ok=True)
+try:
+    os.makedirs("static/css", exist_ok=True)
+    os.makedirs("static/js", exist_ok=True)
+    os.makedirs("templates", exist_ok=True)
+except OSError:
+    pass
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+static_dir = os.path.join(BASE_DIR, "static")
+templates_dir = os.path.join(BASE_DIR, "templates")
+
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+templates = Jinja2Templates(directory=templates_dir)
 
 # Admin credentials
 ADMIN_EMAIL = "admin@gmail.com"
@@ -256,6 +302,19 @@ def startup_db_init():
     # Automatically create tables in MySQL database on application startup
     try:
         Base.metadata.create_all(bind=engine)
+        try:
+            from sqlalchemy import text
+            with engine.begin() as conn:
+                try:
+                    conn.execute(text("ALTER TABLE customers ADD COLUMN email VARCHAR(150) UNIQUE;"))
+                except Exception:
+                    pass
+                try:
+                    conn.execute(text("ALTER TABLE customers ADD COLUMN password_hash VARCHAR(255);"))
+                except Exception:
+                    pass
+        except Exception:
+            pass
     except Exception as e:
         print(f"Error creating tables: {e}")
         
@@ -275,6 +334,19 @@ def startup_db_init():
                 db.commit()
                 print("\nSuccessfully seeded sample customer data.\n")
                 
+            # Seed demo customer if none exists
+            demo_cust = db.query(models.Customer).filter(models.Customer.email == "customer@shopsense.com").first()
+            if not demo_cust:
+                demo_cust = models.Customer(
+                    name="Sarah Miller",
+                    email="customer@shopsense.com",
+                    password_hash=hash_password("customer123"),
+                    total_spend=450.0
+                )
+                db.add(demo_cust)
+                db.commit()
+                print("\nSuccessfully seeded demo customer (customer@shopsense.com / customer123).\n")
+
             # Seed vendor if none exists
             if db.query(models.Vendor).count() == 0:
                 demo_vendor = models.Vendor(
@@ -418,6 +490,30 @@ def startup_db_init():
     except Exception as e:
         print(f"\nFailed to inspect database schema: {e}\n")
 
+    # Launch In-App Automated Weekly AI Agent Background Scheduler
+    try:
+        import asyncio
+        async def weekly_agent_background_loop():
+            enabled = os.getenv("WEEKLY_AGENT_ENABLED", "True").lower() in ("true", "1", "yes")
+            if not enabled:
+                return
+            interval_days = int(os.getenv("WEEKLY_AGENT_INTERVAL_DAYS", "7"))
+            # Initial grace period on server startup before first background evaluation
+            await asyncio.sleep(60)
+            while True:
+                try:
+                    from services.agent_workflow import run_all_approved_vendors_analysis
+                    log_debug_message("[WEEKLY SCHEDULER] Running automated weekly vendor analysis across approved stores...")
+                    run_all_approved_vendors_analysis()
+                except Exception as scheduler_err:
+                    log_debug_message(f"[WEEKLY SCHEDULER] Periodic execution notification: {scheduler_err}")
+                await asyncio.sleep(interval_days * 86400)
+        
+        asyncio.create_task(weekly_agent_background_loop())
+    except Exception as e:
+        print(f"Failed to start weekly agent background scheduler: {e}")
+
+
 # -------------------------------------------------------------
 # Routes - Login
 # -------------------------------------------------------------
@@ -467,6 +563,7 @@ def post_login(
             redirect = RedirectResponse(url="/admin/dashboard", status_code=303)
             redirect.set_cookie(key="admin_session", value=ADMIN_SESSION_VAL, httponly=True, max_age=3600, path="/")
             redirect.delete_cookie(key="vendor_session", path="/")
+            redirect.delete_cookie(key="customer_session", path="/")
             return redirect
         else:
             # Fail: return error
@@ -518,7 +615,36 @@ def post_login(
             redirect = RedirectResponse(url="/vendor/dashboard", status_code=303)
             redirect.set_cookie(key="vendor_session", value=vendor.email, httponly=True, max_age=3600, path="/")
             redirect.delete_cookie(key="admin_session", path="/")
+            redirect.delete_cookie(key="customer_session", path="/")
             return redirect
+
+    elif role == "customer":
+        # Authenticate Customer
+        try:
+            customer = db.query(models.Customer).filter(models.Customer.email == email.lower()).first()
+        except Exception as e:
+            print(f"Database error during customer login: {e}")
+            error_msg = "A server or database error occurred. Please try again later."
+            return templates.TemplateResponse(
+                request,
+                "login.html", 
+                {"role": "customer", "email": "", "error": error_msg}
+            )
+            
+        if not customer or not customer.password_hash or not verify_password(password, customer.password_hash):
+            error_msg = "Invalid customer email or password."
+            return templates.TemplateResponse(
+                request,
+                "login.html", 
+                {"role": "customer", "email": "", "error": error_msg}
+            )
+        
+        # Success: redirect to Customer Portal
+        redirect = RedirectResponse(url="/customer/portal", status_code=303)
+        redirect.set_cookie(key="customer_session", value=customer.email, httponly=True, max_age=3600, path="/")
+        redirect.delete_cookie(key="vendor_session", path="/")
+        redirect.delete_cookie(key="admin_session", path="/")
+        return redirect
 
     error_msg = "Invalid role selected."
     return templates.TemplateResponse(request, "login.html", {"role": "vendor", "error": error_msg})
@@ -610,6 +736,279 @@ def post_register(
         request,
         "register.html",
         {"success": True, "error": None}
+    )
+
+# -------------------------------------------------------------
+# Routes - Customer Registration & Portal
+# -------------------------------------------------------------
+@app.get(
+    "/customer/register",
+    response_class=HTMLResponse,
+    tags=["Authentication & Onboarding"],
+    summary="Render Customer Registration Page",
+    description="Renders the customer self-service registration form."
+)
+def get_customer_register(request: Request):
+    return templates.TemplateResponse(request, "customer_register.html", {"error": None, "success": False})
+
+@app.post(
+    "/customer/register",
+    tags=["Authentication & Onboarding"],
+    summary="Register New Customer",
+    description="Registers a new customer account and creates a customer record in the database."
+)
+def post_customer_register(
+    request: Request,
+    full_name: str = Form(..., description="Customer full name", example="Alex Morgan"),
+    email: str = Form(..., description="Customer email address", example="alex@example.com"),
+    password: str = Form(..., description="Account password (min 6 characters)", example="secret123"),
+    db: Session = Depends(get_db)
+):
+    full_name = full_name.strip()
+    email = email.strip().lower()
+    
+    if not full_name or not email or not password:
+        return templates.TemplateResponse(
+            request, 
+            "customer_register.html", 
+            {"error": "All fields are required.", "full_name": full_name, "email": email}
+        )
+        
+    if len(password) < 6:
+        return templates.TemplateResponse(
+            request, 
+            "customer_register.html", 
+            {"error": "Password must be at least 6 characters long.", "full_name": full_name, "email": email}
+        )
+        
+    existing = db.query(models.Customer).filter(models.Customer.email == email).first()
+    if existing:
+        return templates.TemplateResponse(
+            request, 
+            "customer_register.html", 
+            {"error": "Email is already registered. Please sign in.", "full_name": full_name, "email": email}
+        )
+        
+    new_customer = models.Customer(
+        name=full_name,
+        email=email,
+        password_hash=hash_password(password),
+        total_spend=0.0
+    )
+    db.add(new_customer)
+    db.commit()
+    db.refresh(new_customer)
+    
+    # Set customer session and redirect to Customer Portal
+    redirect = RedirectResponse(url="/customer/portal", status_code=303)
+    redirect.set_cookie(key="customer_session", value=new_customer.email, httponly=True, max_age=3600, path="/")
+    redirect.delete_cookie(key="vendor_session", path="/")
+    redirect.delete_cookie(key="admin_session", path="/")
+    return redirect
+
+@app.get(
+    "/customer/portal",
+    response_class=HTMLResponse,
+    tags=["Customer Portal & Catalog"],
+    summary="Render Customer Portal",
+    description="Renders the customer portal view with catalog browsing and AI shopping assistant."
+)
+def get_customer_portal(
+    request: Request,
+    customer_session: str = Cookie(default=None),
+    db: Session = Depends(get_db)
+):
+    if not customer_session:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    customer = db.query(models.Customer).filter(models.Customer.email == customer_session).first()
+    if not customer:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    products = db.query(models.Product).order_by(models.Product.id.desc()).all()
+    categories = sorted(list({p.category for p in products if p.category}))
+    
+    return templates.TemplateResponse(
+        request,
+        "customer_portal.html",
+        {
+            "customer": customer,
+            "products": products,
+            "categories": categories
+        }
+    )
+
+@app.get(
+    "/customer/api/products",
+    response_model=List[ProductDetailResponse],
+    tags=["Customer Portal & Catalog"],
+    summary="Get Customer Catalog Products",
+    description="Retrieve catalog products for customer browsing with optional search query and category filtering."
+)
+def get_customer_products(
+    q: Optional[str] = Query(None, description="Search query string"),
+    category: Optional[str] = Query(None, description="Category filter"),
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.Product)
+    if category and category.lower() != "all":
+        query = query.filter(models.Product.category.ilike(f"%{category}%"))
+    if q and q.strip():
+        term = f"%{q.strip()}%"
+        query = query.filter(
+            (models.Product.name.ilike(term)) | 
+            (models.Product.description.ilike(term)) | 
+            (models.Product.category.ilike(term))
+        )
+    products = query.order_by(models.Product.id.desc()).all()
+    return [
+        {
+            "id": p.id,
+            "name": p.name,
+            "category": p.category,
+            "price": p.price,
+            "stock": p.stock,
+            "image_url": p.image_url,
+            "description": p.description
+        }
+        for p in products
+    ]
+
+@app.get(
+    "/customer/product/{product_id}",
+    response_class=HTMLResponse,
+    tags=["Customer Portal & Catalog"],
+    summary="Render Customer Product Details Page",
+    description="Renders the product details page with live quantity selection, calculated total amount, and order placement action."
+)
+def get_customer_product_detail(
+    request: Request,
+    product_id: int = Path(..., description="Unique product ID"),
+    customer_session: str = Cookie(default=None),
+    db: Session = Depends(get_db)
+):
+    if not customer_session:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    customer = db.query(models.Customer).filter(models.Customer.email == customer_session).first()
+    if not customer:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+        
+    return templates.TemplateResponse(
+        request,
+        "customer_product_detail.html",
+        {
+            "customer": customer,
+            "product": product,
+            "error": None
+        }
+    )
+
+@app.post(
+    "/customer/order/create",
+    tags=["Customer Portal & Catalog", "Transactions & Real-Time Sync"],
+    summary="Place Customer Product Order",
+    description="Places an order for a catalog product, validates stock availability, creates a transaction record, deducts product inventory, increments customer total spend, and notifies the vendor via WebSocket."
+)
+async def post_customer_order(
+    request: Request,
+    product_id: int = Form(...),
+    quantity: int = Form(...),
+    customer_session: str = Cookie(default=None),
+    db: Session = Depends(get_db)
+):
+    if not customer_session:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    customer = db.query(models.Customer).filter(models.Customer.email == customer_session).first()
+    if not customer:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+        
+    if quantity <= 0:
+        return templates.TemplateResponse(
+            request,
+            "customer_product_detail.html",
+            {"customer": customer, "product": product, "error": "Please select at least 1 unit to order."},
+            status_code=400
+        )
+        
+    if product.stock < quantity:
+        return templates.TemplateResponse(
+            request,
+            "customer_product_detail.html",
+            {"customer": customer, "product": product, "error": f"Insufficient stock. Only {product.stock} units available."},
+            status_code=400
+        )
+        
+    total_amount = round(product.price * quantity, 2)
+    
+    new_tx = models.Transaction(
+        vendor_email=product.vendor_email,
+        product_id=product.id,
+        amount=total_amount,
+        quantity=quantity
+    )
+    
+    try:
+        db.add(new_tx)
+        # Update customer cumulative spend
+        customer.total_spend = (customer.total_spend or 0.0) + total_amount
+        db.commit()
+        db.refresh(new_tx)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database order placement failed: {e}")
+        
+    # Real-time WebSocket sync to vendor dashboard
+    try:
+        await manager.send_personal_message({"event": "sales_updated"}, product.vendor_email)
+    except Exception:
+        pass
+        
+    return RedirectResponse(url=f"/customer/order-confirmation/{new_tx.id}", status_code=303)
+
+@app.get(
+    "/customer/order-confirmation/{transaction_id}",
+    response_class=HTMLResponse,
+    tags=["Customer Portal & Catalog"],
+    summary="Render Customer Order Confirmation Page",
+    description="Renders the order acknowledgment page displaying the transaction reference, purchased product summary, and customer details."
+)
+def get_customer_order_confirmation(
+    request: Request,
+    transaction_id: int = Path(..., description="Unique transaction ID"),
+    customer_session: str = Cookie(default=None),
+    db: Session = Depends(get_db)
+):
+    if not customer_session:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    customer = db.query(models.Customer).filter(models.Customer.email == customer_session).first()
+    if not customer:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    transaction = db.query(models.Transaction).filter(models.Transaction.id == transaction_id).first()
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+        
+    product = db.query(models.Product).filter(models.Product.id == transaction.product_id).first()
+    
+    return templates.TemplateResponse(
+        request,
+        "customer_order_confirmation.html",
+        {
+            "customer": customer,
+            "transaction": transaction,
+            "product": product
+        }
     )
 
 @app.get(
@@ -743,7 +1142,7 @@ def suspend_vendor(
     response_model=List[CustomerResponse],
     tags=["Admin Management"],
     summary="Retrieve Customer Behavioral Segmentation",
-    description="Returns customer records enriched with behavioral segmentation labels based on cumulative spending thresholds: 'Premium Customer' (₹1,000+), 'Regular Customer' (₹100-₹999), and 'New Customer' (<₹100). Requires `admin_session` cookie.",
+    description="Returns customer records enriched with behavioral segmentation labels based on cumulative spending thresholds: 'Premium Customer' ($1,000+), 'Regular Customer' ($100-$999), and 'New Customer' (<$100). Requires `admin_session` cookie.",
     responses={
         200: {"description": "List of customer segmentation profiles.", "model": List[CustomerResponse]},
         401: {"description": "Unauthorized: Missing or invalid admin session."}
@@ -1201,7 +1600,7 @@ async def post_add_product(
     request: Request,
     name: str = Form(..., description="Product display name", example="Pro Wireless Headphones X2"),
     category: str = Form(..., description="Product retail category", example="Electronics"),
-    price: float = Form(..., description="Product unit price in INR", example=149.99),
+    price: float = Form(..., description="Product unit price in USD", example=149.99),
     stock: int = Form(..., description="Available inventory stock units", example=50),
     image_url: str = Form(None, description="Public image URL of product", example="https://images.unsplash.com/photo-1505740420928-5e560c06d30e"),
     description: str = Form(None, description="Product description text", example="High-fidelity audio with active noise cancellation."),
@@ -1552,7 +1951,7 @@ async def edit_vendor_product(
     product_id: int = Path(..., description="Unique integer ID of the product to modify", example=1),
     name: str = Form(..., description="Updated product name", example="Pro Wireless Headphones X2"),
     category: str = Form(..., description="Updated product category", example="Electronics"),
-    price: float = Form(..., description="Updated unit price in INR", example=149.99),
+    price: float = Form(..., description="Updated unit price in USD", example=149.99),
     stock: int = Form(..., description="Updated available inventory stock", example=45),
     image_url: str = Form(None, description="Updated product image URL", example="https://images.unsplash.com/photo-1505740420928-5e560c06d30e"),
     description: str = Form(None, description="Updated product description", example="High-fidelity audio with active noise cancellation."),
@@ -1700,6 +2099,7 @@ def logout():
     response = RedirectResponse(url="/login", status_code=303)
     response.delete_cookie(key="admin_session", path="/")
     response.delete_cookie(key="vendor_session", path="/")
+    response.delete_cookie(key="customer_session", path="/")
     return response
 
 
@@ -1708,7 +2108,7 @@ def logout():
     response_model=VerifySeedingResponse,
     tags=["Transactions & Real-Time Sync"],
     summary="Verify and Seed Demo Sales Data",
-    description="Seeds baseline transaction data (10 orders totaling ₹5,000) or creates a new sample order for the vendor, recalculating metrics and dispatching a live `sales_updated` WebSocket event to connected dashboards.",
+    description="Seeds baseline transaction data (10 orders totaling $5,000) or creates a new sample order for the vendor, recalculating metrics and dispatching a live `sales_updated` WebSocket event to connected dashboards.",
     responses={
         200: {"description": "Demo sales data successfully seeded and synchronized.", "model": VerifySeedingResponse}
     }
@@ -1800,7 +2200,7 @@ async def verify_seeding(
             seed_baseline_transactions(db, vendor.email)
             order_info = {
                 "type": "baseline_reset",
-                "message": "Initialized baseline 10 orders totaling ₹5,000"
+                "message": "Initialized baseline 10 orders totaling $5,000"
             }
         else:
             # Create a new sample sales transaction/order
@@ -1850,7 +2250,7 @@ async def verify_seeding(
                 "pending_orders": pending_orders,
                 "total_sales": total_sales,
                 "total_revenue": total_revenue,
-                "total_revenue_formatted": f"₹{total_revenue:,.2f}"
+                "total_revenue_formatted": f"${total_revenue:,.2f}"
             }
         }
         await manager.send_personal_message(event_payload, vendor.email)
@@ -1863,7 +2263,7 @@ async def verify_seeding(
             "updated_metrics": {
                 "total_orders": total_orders,
                 "completed_orders": completed_orders,
-                "total_sales": f"₹{total_revenue:,.2f}"
+                "total_sales": f"${total_revenue:,.2f}"
             },
             "real_time_sync": "Broadcasted over WebSocket to Vendor Dashboard"
         }
@@ -2248,7 +2648,7 @@ def retrieve_grounded_products(query_text: str, db: Session, max_results: int = 
     import re
     q_lower = query_text.lower()
     
-    # 1. Price constraint detection (e.g. "under 500", "under ₹500", "below 500", "less than 500", "500-kulla", "kammiya")
+    # 1. Price constraint detection (e.g. "under 500", "under $500", "below 500", "less than 500", "500-kulla", "kammiya")
     price_match = re.search(r'(?:under|below|less than|within|upto|up to|kulla|kammi)\s*(?:rs\.?|inr|₹|\$)?\s*(\d+(?:\.\d+)?)', q_lower)
     max_price = float(price_match.group(1)) if price_match else None
     
@@ -2400,7 +2800,7 @@ Answer:"""
         # Step 3: Format Grounded Context
         grounded_context = ""
         for i, p in enumerate(matched_products, 1):
-            grounded_context += f"Product {i}:\n- Name: {p['name']}\n- Category: {p['category']}\n- Price: ₹{p['price']:.2f}\n- Stock: {p['stock']} units\n- Description: {p['description']}\n\n"
+            grounded_context += f"Product {i}:\n- Name: {p['name']}\n- Category: {p['category']}\n- Price: ${p['price']:.2f}\n- Stock: {p['stock']} units\n- Description: {p['description']}\n\n"
             
         # Step 4: Grounded Recommendation Prompt
         rag_prompt = f"""You are the ShopSense AI Shopping Assistant, a helpful and grounded product recommendation advisor.
@@ -2413,7 +2813,7 @@ User Question: {question}
 
 STRICT GROUNDING RULES:
 1. Grounding Guarantee: Base your answer ONLY on the products in [CATALOG CONTEXT]. Do NOT invent products, prices, stock, specifications, or features that are not explicitly provided.
-2. Always refer to products by their exact name (e.g. "{matched_products[0]['name']}") and exact price in ₹. NEVER refer to them as "Product ID 1" or "Product 1".
+2. Always refer to products by their exact name (e.g. "{matched_products[0]['name']}") and exact price in $. NEVER refer to them as "Product ID 1" or "Product 1".
 3. When recommending, briefly highlight 2-3 key features from the description and explain why it fits the user's needs.
 4. Conclude with this exact note (translated appropriately if in Tamil/Tanglish): "This recommendation is based on the products currently available in the catalog."
 5. LANGUAGE MATCHING RULE: Always respond in the EXACT same language and style used by the user:
@@ -2441,6 +2841,154 @@ Answer:"""
             "message": f"I encountered an error processing your request: {str(e)}",
             "matched_products": []
         }
+
+@app.post(
+    "/customer/api/shopping-assistant",
+    response_model=ShoppingAssistantResponse,
+    tags=["AI Services", "Customer Portal & Catalog"],
+    summary="Customer Grounded Shopping Assistant (RAG)",
+    description="Customer-facing grounded product recommendation advisor using Retrieval-Augmented Generation (RAG). Reuses catalog retrieval from MySQL and invokes Google Gemini to synthesize a grounded recommendation. Supports English, Tamil, and Tanglish queries.",
+    responses={
+        200: {"description": "Grounded shopping recommendation generated.", "model": ShoppingAssistantResponse},
+        400: {"description": "Bad Request: Question cannot be empty."},
+        401: {"description": "Unauthorized: Missing or invalid customer session."}
+    }
+)
+async def post_customer_shopping_assistant(
+    req: ShoppingAssistantRequest,
+    customer_session: str = Cookie(default=None, description="Customer session authentication cookie"),
+    db: Session = Depends(get_db)
+):
+    if not customer_session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+        
+    customer = db.query(models.Customer).filter(models.Customer.email == customer_session).first()
+    if not customer:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+        
+    question = req.question.strip()
+    if not question:
+        raise HTTPException(status_code=400, detail="Question cannot be empty")
+        
+    try:
+        log_debug_message(f"Customer Shopping Assistant query received: {question}")
+        # Step 1: Real RAG Catalog Retrieval from MySQL
+        matched_products = retrieve_grounded_products(question, db, max_results=4)
+        log_debug_message(f"Customer Shopping Assistant retrieved {len(matched_products)} products: {[p['name'] for p in matched_products]}")
+        
+        # Step 2: Handle Empty Results (Grounding Guarantee)
+        if not matched_products:
+            fallback_prompt = f"""You are the ShopSense AI Shopping Assistant.
+The user asked a product question: "{question}".
+No matching product exists in the catalog.
+State clearly that you couldn't find a matching product in the current catalog.
+LANGUAGE MATCHING RULE:
+- English question -> Reply in English: "I couldn't find a matching product in the current catalog."
+- Tamil question -> Reply in natural Tamil stating that no matching products were found in the current catalog.
+- Tanglish question -> Reply in conversational Tanglish stating that no matching products were found in the current catalog.
+Answer:"""
+            nl_answer = call_gemini(fallback_prompt).strip()
+            return {
+                "status": "not_found",
+                "answer": nl_answer,
+                "matched_products": []
+            }
+            
+        # Step 3: Format Grounded Context
+        grounded_context = ""
+        for i, p in enumerate(matched_products, 1):
+            grounded_context += f"Product {i}:\n- Name: {p['name']}\n- Category: {p['category']}\n- Price: ${p['price']:.2f}\n- Stock: {p['stock']} units\n- Description: {p['description']}\n\n"
+            
+        # Step 4: Grounded Recommendation Prompt
+        rag_prompt = f"""You are the ShopSense AI Shopping Assistant, a helpful and grounded product recommendation advisor.
+Your task is to recommend and explain products to the user based STRICTLY on the retrieved catalog context below.
+
+[CATALOG CONTEXT]
+{grounded_context}
+
+User Question: {question}
+
+STRICT GROUNDING RULES:
+1. Grounding Guarantee: Base your answer ONLY on the products in [CATALOG CONTEXT]. Do NOT invent products, prices, stock, specifications, or features that are not explicitly provided.
+2. Always refer to products by their exact name (e.g. "{matched_products[0]['name']}") and exact price in $. NEVER refer to them as "Product ID 1" or "Product 1".
+3. When recommending, briefly highlight 2-3 key features from the description and explain why it fits the user's needs.
+4. Conclude with this exact note (translated appropriately if in Tamil/Tanglish): "This recommendation is based on the products currently available in the catalog."
+5. LANGUAGE MATCHING RULE: Always respond in the EXACT same language and style used by the user:
+   - English question -> Respond in English.
+   - Tamil question (Tamil script) -> Respond in natural Tamil.
+   - Tanglish (Tamil-English mixed) -> Respond naturally in the same conversational Tanglish style.
+   - Other languages -> Match the question's language.
+6. Keep the answer concise, friendly, and under 150 words.
+
+Answer:"""
+
+        log_debug_message("Calling Gemini for Customer Shopping Assistant...")
+        answer = call_gemini(rag_prompt).strip()
+        log_debug_message(f"Customer Shopping Assistant answer generated: {answer}")
+        
+        return {
+            "status": "success",
+            "answer": answer,
+            "matched_products": matched_products
+        }
+    except Exception as e:
+        log_debug_message(f"Customer Shopping Assistant EXCEPTION: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"I encountered an error processing your request: {str(e)}",
+            "matched_products": []
+        }
+
+@app.post(
+    "/vendor/api/weekly-report/generate",
+    response_model=WeeklyReportResponse,
+    tags=["AI Services"],
+    summary="Generate Weekly AI Business Report & Send Email",
+    description="Executes the LangGraph AI Agent Workflow to analyze the authenticated vendor's weekly business data (sales, revenue, inventory) from MySQL, generate personalized Gemini AI insights, and transmit the executive report directly to the vendor's registered email address via SMTP.",
+    responses={
+        200: {"description": "Weekly business report compiled and dispatched successfully.", "model": WeeklyReportResponse},
+        401: {"description": "Unauthorized: Missing or unapproved vendor session."},
+        404: {"description": "Vendor account not found."},
+        500: {"description": "Internal server error executing AI agent workflow."}
+    }
+)
+async def generate_weekly_report(
+    vendor_session: str = Cookie(default=None, description="Vendor session authentication cookie"),
+    db: Session = Depends(get_db)
+):
+    if not vendor_session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    vendor = db.query(models.Vendor).filter(models.Vendor.email == vendor_session).first()
+    if not vendor or vendor.status != "Approved":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    from services.agent_workflow import run_weekly_vendor_analysis
+    try:
+        report_state = run_weekly_vendor_analysis(vendor.email, db=db)
+        if report_state.get("error"):
+            raise HTTPException(status_code=500, detail=report_state["error"])
+
+        return {
+            "status": "success",
+            "vendor_email": report_state["vendor_email"],
+            "vendor_name": report_state.get("vendor_name", vendor.full_name),
+            "business_name": report_state.get("business_name", vendor.business_name),
+            "period_start": report_state.get("period_start", ""),
+            "period_end": report_state.get("period_end", ""),
+            "metrics": report_state.get("metrics", {}),
+            "top_products": report_state.get("top_products", []),
+            "low_products": report_state.get("low_products", []),
+            "inventory_alerts": report_state.get("inventory_alerts", []),
+            "ai_insights": report_state.get("ai_insights", ""),
+            "recommendations": report_state.get("recommendations", []),
+            "email_status": report_state.get("email_status", {})
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        log_debug_message(f"[WEEKLY REPORT API EXCEPTION] {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate weekly report: {str(e)}")
 
 @app.get(
     "/debug-db",
