@@ -23,8 +23,14 @@ git rm --cached .env 2>nul
 git rm --cached shopsense.db 2>nul
 git rm --cached render.yaml 2>nul
 git rm --cached render_deploy_guide.md 2>nul
+git rm --cached vercel.json 2>nul
+git rm --cached vercel_deploy_guide.md 2>nul
+git rm -r --cached api 2>nul
 if exist "render.yaml" del /f /q "render.yaml" 2>nul
 if exist "render_deploy_guide.md" del /f /q "render_deploy_guide.md" 2>nul
+if exist "vercel.json" del /f /q "vercel.json" 2>nul
+if exist "vercel_deploy_guide.md" del /f /q "vercel_deploy_guide.md" 2>nul
+if exist "api" rmdir /s /q "api" 2>nul
 
 :: 3. Stage required Milestone 4 files
 echo [2/6] Staging Milestone 4 project files...

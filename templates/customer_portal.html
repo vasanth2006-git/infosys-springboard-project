@@ -4,63 +4,36 @@
 
 {% block head %}
 <style>
-    .customer-portal-layout {
-        min-height: 100vh;
-        background: radial-gradient(circle at 15% 15%, #180d07 0%, #09090b 60%, #030304 100%);
-        color: var(--text-main);
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* Top Navigation Bar */
-    .portal-navbar {
-        background-color: rgba(18, 18, 21, 0.9);
+    /* Customer Portal Dashboard Layout */
+    .customer-topbar {
+        background: rgba(18, 18, 21, 0.85);
         backdrop-filter: blur(12px);
-        border-bottom: 1px solid var(--border-color);
-        padding: 0.9rem 2rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 0.85rem 1.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        position: sticky;
-        top: 0;
-        z-index: 100;
+        margin-bottom: 2rem;
     }
 
-    .brand-section {
+    .customer-topbar-left {
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        text-decoration: none;
     }
 
-    .brand-logo-icon {
-        color: var(--primary-color);
-        font-size: 1.6rem;
-    }
-
-    .brand-title {
-        font-size: 1.3rem;
-        font-weight: 800;
-        color: var(--text-white);
-        letter-spacing: -0.5px;
-    }
-
-    .brand-badge {
-        background: rgba(249, 115, 22, 0.15);
-        color: var(--primary-color);
-        border: 1px solid rgba(249, 115, 22, 0.35);
-        font-size: 0.75rem;
+    .customer-topbar-title {
+        font-size: 1.15rem;
         font-weight: 700;
-        padding: 0.2rem 0.55rem;
-        border-radius: 4px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        color: var(--text-white);
+        margin: 0;
     }
 
-    .user-nav-section {
+    .customer-topbar-right {
         display: flex;
         align-items: center;
-        gap: 1.25rem;
+        gap: 1rem;
     }
 
     .customer-pill {
@@ -87,32 +60,40 @@
         font-weight: 700;
     }
 
-    .logout-link {
-        color: var(--text-muted);
-        font-size: 0.88rem;
-        font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.4rem 0.85rem;
+    /* Cart Toggle Button */
+    .customer-cart-btn {
+        background: rgba(249, 115, 22, 0.12);
+        border: 1px solid rgba(249, 115, 22, 0.35);
+        color: var(--primary-light);
+        padding: 0.45rem 1rem;
         border-radius: var(--radius-sm);
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        position: relative;
         transition: all 0.2s ease;
     }
 
-    .logout-link:hover {
-        color: var(--danger);
-        background: rgba(239, 68, 68, 0.1);
+    .customer-cart-btn:hover {
+        background: rgba(249, 115, 22, 0.22);
+        border-color: var(--primary-color);
+        color: #fff;
+        transform: translateY(-1px);
     }
 
-    /* Main Container */
-    .portal-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 2rem;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
+    .customer-cart-badge {
+        background: var(--primary-color);
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 0.15rem 0.45rem;
+        border-radius: 50px;
+        min-width: 18px;
+        text-align: center;
+        line-height: 1;
     }
 
     /* Hero / Search Section */
@@ -209,26 +190,12 @@
         font-weight: 600;
     }
 
-    /* Grid Layout: Catalog (Left) + AI Assistant (Right) */
-    .portal-grid {
-        display: grid;
-        grid-template-columns: 1fr 450px;
-        gap: 2rem;
-        align-items: start;
-    }
-
-    @media (max-width: 1100px) {
-        .portal-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
     /* Product Cards Grid */
     .catalog-section-title {
         font-size: 1.25rem;
         font-weight: 700;
         color: var(--text-white);
-        margin-bottom: 1rem;
+        margin-bottom: 1.25rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -236,7 +203,7 @@
 
     .products-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
         gap: 1.5rem;
     }
 
@@ -258,7 +225,7 @@
 
     .product-image-container {
         width: 100%;
-        height: 180px;
+        height: 190px;
         background: #18181b;
         position: relative;
         overflow: hidden;
@@ -336,7 +303,7 @@
     }
 
     .product-price {
-        font-size: 1.2rem;
+        font-size: 1.25rem;
         font-weight: 800;
         color: var(--text-white);
     }
@@ -360,142 +327,175 @@
         border: 1px solid rgba(234, 179, 8, 0.25);
     }
 
-    .ask-ai-item-btn {
-        margin-top: 0.75rem;
-        width: 100%;
-        background: rgba(99, 102, 241, 0.1);
-        border: 1px solid rgba(99, 102, 241, 0.25);
-        color: #a5b4fc;
-        padding: 0.55rem;
-        border-radius: var(--radius-sm);
-        font-size: 0.82rem;
-        font-weight: 600;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    /* Product Card Actions: View Details | Ask AI | Add to Cart */
+    .product-card-actions {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
         gap: 0.45rem;
-        transition: all 0.2s ease;
+        margin-top: 0.95rem;
+        padding-top: 0.85rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
 
-    .ask-ai-item-btn:hover {
-        background: rgba(99, 102, 241, 0.25);
+    .card-action-btn {
+        padding: 0.55rem 0.35rem;
+        font-size: 0.76rem;
+        font-weight: 600;
+        border-radius: var(--radius-sm);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        border: 1px solid transparent;
+    }
+
+    .btn-view-details {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: var(--border-color);
+        color: var(--text-white);
+    }
+
+    .btn-view-details:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.25);
+        color: #fff;
+    }
+
+    .btn-ask-ai {
+        background: rgba(99, 102, 241, 0.1);
+        border-color: rgba(99, 102, 241, 0.28);
+        color: #a5b4fc;
+    }
+
+    .btn-ask-ai:hover {
+        background: rgba(99, 102, 241, 0.22);
         border-color: rgba(99, 102, 241, 0.5);
         color: #fff;
     }
 
-    /* AI Shopping Assistant Widget (Right Column) */
-    .ai-assistant-card {
-        background: var(--bg-card);
-        border: 1px solid rgba(99, 102, 241, 0.35);
-        border-radius: var(--radius-lg);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-        position: sticky;
-        top: 5rem;
+    .btn-add-cart {
+        background: linear-gradient(135deg, var(--primary-color), #ea580c);
+        color: #fff;
+    }
+
+    .btn-add-cart:hover:not(:disabled) {
+        background: linear-gradient(135deg, #ea580c, #c2410c);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35);
+    }
+
+    .btn-add-cart:disabled {
+        background: #27272a;
+        color: #71717a;
+        cursor: not-allowed;
+        box-shadow: none;
+        border-color: #3f3f46;
+    }
+
+    .btn-added-flash {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        color: #fff !important;
+    }
+
+    /* AI Shopping Assistant Dedicated Workspace Tab */
+    .ai-assistant-container {
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        gap: 1.5rem;
     }
 
-    .assistant-header {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.15));
-        border-bottom: 1px solid var(--border-color);
-        padding: 1.25rem 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .assistant-header-title {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-    }
-
-    .assistant-header-title h2 {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: var(--text-white);
-        margin: 0;
+    .assistant-hero {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: var(--radius-lg);
+        padding: 1.75rem 2rem;
     }
 
     .rag-badge {
         background: rgba(99, 102, 241, 0.25);
         color: #c7d2fe;
-        border: 1px solid rgba(99, 102, 241, 0.4);
-        padding: 0.25rem 0.55rem;
-        font-size: 0.72rem;
+        border: 1px solid rgba(99, 102, 241, 0.45);
+        padding: 0.3rem 0.65rem;
+        font-size: 0.76rem;
         font-weight: 700;
         border-radius: 4px;
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
+        gap: 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
     }
 
-    .assistant-body {
-        padding: 1.5rem;
+    .assistant-workspace-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 1.75rem;
         display: flex;
         flex-direction: column;
-        gap: 1.25rem;
-        max-height: 75vh;
-        overflow-y: auto;
+        gap: 1.5rem;
+        box-shadow: var(--shadow-md);
     }
 
     .suggested-chips-label {
-        font-size: 0.75rem;
+        font-size: 0.78rem;
         font-weight: 700;
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.65rem;
     }
 
-    .suggested-chips {
-        display: flex;
-        flex-direction: column;
-        gap: 0.4rem;
+    .suggested-chips-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 0.65rem;
     }
 
     .chip-btn {
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid var(--border-color);
         color: #cbd5e1;
-        padding: 0.5rem 0.75rem;
+        padding: 0.65rem 0.95rem;
         border-radius: var(--radius-sm);
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         text-align: left;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.6rem;
         transition: all 0.2s ease;
     }
 
     .chip-btn:hover {
         background: rgba(99, 102, 241, 0.15);
-        border-color: rgba(99, 102, 241, 0.35);
+        border-color: rgba(99, 102, 241, 0.4);
         color: var(--text-white);
-        transform: translateX(2px);
+        transform: translateX(3px);
     }
 
     .assistant-input-group {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.75rem;
         align-items: flex-end;
     }
 
     .assistant-input {
         flex: 1;
-        padding: 0.75rem 1rem;
+        padding: 0.9rem 1.15rem;
         background: #18181b;
         border: 1px solid var(--border-color);
         border-radius: var(--radius-md);
         color: var(--text-white);
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         resize: none;
         outline: none;
-        min-height: 48px;
-        line-height: 1.4;
+        min-height: 54px;
+        line-height: 1.45;
     }
 
     .assistant-input:focus {
@@ -508,12 +508,12 @@
         color: #fff;
         border: none;
         border-radius: var(--radius-md);
-        width: 48px;
-        height: 48px;
+        width: 54px;
+        height: 54px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         cursor: pointer;
         transition: all 0.2s ease;
         flex-shrink: 0;
@@ -521,34 +521,33 @@
 
     .send-ai-btn:hover {
         background: linear-gradient(135deg, #4338ca, #4f46e5);
-        transform: scale(1.05);
+        transform: scale(1.04);
     }
 
-    /* Response Area */
     .ai-loading-box {
         display: none;
         text-align: center;
-        padding: 1.5rem;
+        padding: 2.25rem 1.5rem;
         background: rgba(99, 102, 241, 0.05);
-        border: 1px dashed rgba(99, 102, 241, 0.3);
+        border: 1px dashed rgba(99, 102, 241, 0.35);
         border-radius: var(--radius-md);
     }
 
     .ai-response-box {
         display: none;
         background: #18181b;
-        border: 1px solid rgba(99, 102, 241, 0.3);
+        border: 1px solid rgba(99, 102, 241, 0.35);
         border-radius: var(--radius-md);
-        padding: 1.25rem;
+        padding: 1.5rem;
         flex-direction: column;
-        gap: 1rem;
+        gap: 1.25rem;
     }
 
     .ai-answer-header {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        font-size: 0.85rem;
+        gap: 0.55rem;
+        font-size: 0.88rem;
         font-weight: 700;
         color: #a5b4fc;
         text-transform: uppercase;
@@ -556,22 +555,22 @@
     }
 
     .ai-answer-text {
-        font-size: 0.92rem;
-        line-height: 1.55;
+        font-size: 0.95rem;
+        line-height: 1.6;
         color: var(--text-white);
         white-space: pre-wrap;
     }
 
     .matched-prods-container {
         border-top: 1px solid var(--border-color);
-        padding-top: 1rem;
+        padding-top: 1.25rem;
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.85rem;
     }
 
     .matched-title {
-        font-size: 0.78rem;
+        font-size: 0.8rem;
         font-weight: 700;
         color: var(--text-muted);
         text-transform: uppercase;
@@ -581,24 +580,22 @@
     .matched-mini-card {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 1rem;
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid var(--border-color);
         border-radius: var(--radius-sm);
-        padding: 0.6rem;
+        padding: 0.75rem 1rem;
         transition: all 0.2s ease;
-        cursor: pointer;
     }
 
     .matched-mini-card:hover {
         border-color: rgba(99, 102, 241, 0.6);
-        background: rgba(99, 102, 241, 0.1);
-        transform: translateY(-1px);
+        background: rgba(99, 102, 241, 0.08);
     }
 
     .matched-mini-img {
-        width: 44px;
-        height: 44px;
+        width: 50px;
+        height: 50px;
         border-radius: 4px;
         object-fit: cover;
         background: #27272a;
@@ -611,7 +608,7 @@
     }
 
     .matched-mini-name {
-        font-size: 0.85rem;
+        font-size: 0.92rem;
         font-weight: 600;
         color: var(--text-white);
         white-space: nowrap;
@@ -620,15 +617,9 @@
     }
 
     .matched-mini-price {
-        font-size: 0.8rem;
+        font-size: 0.88rem;
         font-weight: 700;
         color: var(--primary-color);
-    }
-
-    .matched-mini-stock {
-        font-size: 0.7rem;
-        color: var(--text-muted);
-        margin-left: 0.5rem;
     }
 
     .no-prods-message {
@@ -637,66 +628,354 @@
         color: var(--text-muted);
         grid-column: 1 / -1;
     }
+
+    /* Cart Slide-out Drawer */
+    .cart-drawer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .cart-drawer-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .cart-drawer {
+        position: fixed;
+        top: 0;
+        right: -450px;
+        width: 100%;
+        max-width: 440px;
+        height: 100vh;
+        background: #121215;
+        border-left: 1px solid var(--border-color);
+        box-shadow: -10px 0 35px rgba(0, 0, 0, 0.6);
+        z-index: 1001;
+        display: flex;
+        flex-direction: column;
+        transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .cart-drawer.active {
+        right: 0;
+    }
+
+    .cart-drawer-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #18181b;
+    }
+
+    .cart-close-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0.35rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease;
+    }
+
+    .cart-close-btn:hover {
+        color: var(--text-white);
+    }
+
+    .cart-drawer-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .cart-drawer-footer {
+        padding: 1.25rem 1.5rem;
+        border-top: 1px solid var(--border-color);
+        background: #18181b;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+
+    .cart-total-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .cart-item-card {
+        background: #18181b;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 0.85rem;
+        display: flex;
+        gap: 0.85rem;
+        align-items: center;
+    }
+
+    .cart-item-img {
+        width: 52px;
+        height: 52px;
+        border-radius: 4px;
+        object-fit: cover;
+        background: #27272a;
+        flex-shrink: 0;
+    }
+
+    .cart-item-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .cart-item-title {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-white);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 0.2rem;
+    }
+
+    .cart-item-price {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .cart-stepper {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.4rem;
+    }
+
+    .cart-stepper-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        color: var(--text-white);
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .cart-stepper-btn:hover:not(:disabled) {
+        background: rgba(249, 115, 22, 0.2);
+        border-color: var(--primary-color);
+    }
+
+    .cart-stepper-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .cart-stepper-qty {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-white);
+        min-width: 20px;
+        text-align: center;
+    }
+
+    .cart-item-remove-btn {
+        background: transparent;
+        border: none;
+        color: #71717a;
+        cursor: pointer;
+        font-size: 0.85rem;
+        padding: 0.4rem;
+        transition: color 0.2s ease;
+    }
+
+    .cart-item-remove-btn:hover {
+        color: var(--danger);
+    }
+
+    /* Small Floating Toast Notification */
+    .toast-container {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        z-index: 9999;
+        pointer-events: none;
+    }
+
+    .toast-item {
+        background: #18181b;
+        border: 1px solid var(--border-color);
+        color: var(--text-white);
+        padding: 0.75rem 1.25rem;
+        border-radius: var(--radius-md);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        opacity: 0;
+        transform: translateY(15px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        pointer-events: auto;
+    }
+
+    .toast-item.toast-show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .toast-success {
+        border-color: rgba(16, 185, 129, 0.4);
+        background: #0f1c16;
+    }
+
+    .toast-success i {
+        color: var(--success);
+        font-size: 1.1rem;
+    }
+
+    .toast-warning {
+        border-color: rgba(234, 179, 8, 0.4);
+        background: #1d180b;
+    }
+
+    .toast-warning i {
+        color: var(--warning);
+        font-size: 1.1rem;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 900px) {
+        .customer-topbar {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .customer-topbar-right {
+            width: 100%;
+            justify-content: space-between;
+        }
+        .products-grid {
+            grid-template-columns: 1fr;
+        }
+        .product-card-actions {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="customer-portal-layout">
+<div class="dashboard-layout">
 
-    <!-- Top Navigation Bar -->
-    <header class="portal-navbar">
-        <a href="/customer/portal" class="brand-section">
-            <i class="fa-solid fa-bag-shopping brand-logo-icon"></i>
-            <span class="brand-title">ShopSense</span>
-            <span class="brand-badge">Customer Portal</span>
-        </a>
+    <!-- LEFT SIDEBAR MENU -->
+    <aside class="sidebar">
+        <div class="sidebar-logo" style="margin-bottom: 0.25rem;">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span>ShopSense</span>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--primary-color); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding-left: 0.5rem; margin-bottom: 2rem;">
+            Customer Portal
+        </div>
 
-        <div class="user-nav-section">
-            <div class="customer-pill">
-                <div class="customer-avatar">{{ customer.name[0] if customer and customer.name else 'C' }}</div>
-                <span style="font-weight: 600; color: var(--text-white);">{{ customer.name }}</span>
-                <span class="badge {% if customer.segment == 'Premium Customer' %}badge-premium-customer{% elif customer.segment == 'Regular Customer' %}badge-regular-customer{% else %}badge-new-customer{% endif %}" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
-                    {{ customer.segment }}
-                </span>
-            </div>
-            <a href="/logout" class="logout-link">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+        <nav class="sidebar-nav">
+            <button type="button" class="nav-item active" data-tab="dashboard-view" onclick="switchCustomerTab('dashboard-view')">
+                <i class="fa-solid fa-table-columns"></i>
+                <span>Dashboard</span>
+            </button>
+            <button type="button" class="nav-item" data-tab="ai-assistant-view" onclick="switchCustomerTab('ai-assistant-view')">
+                <i class="fa-solid fa-robot"></i>
+                <span>AI Shopping Assistant</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/logout" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Log Out</span>
             </a>
         </div>
-    </header>
+    </aside>
 
-    <!-- Main Container -->
-    <main class="portal-container">
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
 
-        <!-- Hero & Search Banner -->
-        <section class="hero-banner">
-            <div class="hero-header">
-                <h1>Welcome, {{ customer.name }}!</h1>
-                <p>Explore our active marketplace catalog and receive AI-grounded product advice tailored to your needs.</p>
+        <!-- Top Header Bar -->
+        <header class="customer-topbar">
+            <div class="customer-topbar-left">
+                <h2 id="currentViewTitle" class="customer-topbar-title">Customer Dashboard</h2>
             </div>
 
-            <!-- Search and Filter Controls -->
-            <div class="search-filter-bar">
-                <div class="search-input-wrapper">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="catalogSearch" class="catalog-search-input" placeholder="Search catalog by name, category, or keyword..." oninput="filterCatalog()">
+            <div class="customer-topbar-right">
+                <div class="customer-pill">
+                    <div class="customer-avatar">{{ customer.name[0] if customer and customer.name else 'C' }}</div>
+                    <span style="font-weight: 600; color: var(--text-white);">{{ customer.name }}</span>
+                    <span class="badge {% if customer.segment == 'Premium Customer' %}badge-premium-customer{% elif customer.segment == 'Regular Customer' %}badge-regular-customer{% else %}badge-new-customer{% endif %}" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
+                        {{ customer.segment }}
+                    </span>
                 </div>
-            </div>
 
-            <!-- Category Pills -->
-            <div class="category-pills">
-                <button class="cat-pill active" data-cat="all" onclick="selectCategory('all', this)">All Products</button>
-                {% for cat in categories %}
-                <button class="cat-pill" data-cat="{{ cat }}" onclick="selectCategory('{{ cat }}', this)">{{ cat }}</button>
-                {% endfor %}
+                <button type="button" class="customer-cart-btn" onclick="toggleCartDrawer()" title="View your shopping cart">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span>Cart</span>
+                    <span id="cartCountBadge" class="customer-cart-badge" style="display: none;">0</span>
+                </button>
             </div>
-        </section>
+        </header>
 
-        <!-- Main Content Grid -->
-        <div class="portal-grid">
-            
-            <!-- LEFT COLUMN: Product Catalog -->
-            <section class="catalog-section">
+        <!-- TAB 1: DASHBOARD VIEW (Unchanged Dashboard with Welcome, Search, and Catalog) -->
+        <div id="dashboard-view" class="tab-content" style="display: block;">
+
+            <!-- Welcome & Search Section -->
+            <section class="hero-banner">
+                <div class="hero-header">
+                    <h1>Welcome, {{ customer.name }}!</h1>
+                    <p>Explore our active marketplace catalog and receive AI-grounded product advice tailored to your needs.</p>
+                </div>
+
+                <!-- Search and Filter Controls -->
+                <div class="search-filter-bar">
+                    <div class="search-input-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="catalogSearch" class="catalog-search-input" placeholder="Search catalog by name, category, or keyword..." oninput="filterCatalog()">
+                    </div>
+                </div>
+
+                <!-- Category Pills -->
+                <div class="category-pills">
+                    <button class="cat-pill active" data-cat="all" onclick="selectCategory('all', this)">All Products</button>
+                    {% for cat in categories %}
+                    <button class="cat-pill" data-cat="{{ cat }}" onclick="selectCategory('{{ cat }}', this)">{{ cat }}</button>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Product Catalog Grid -->
+            <section class="catalog-section" style="margin-top: 1.75rem;">
                 <div class="catalog-section-title">
                     <span>Active Marketplace Products (<span id="productCount">{{ products|length }}</span>)</span>
                 </div>
@@ -723,12 +1002,17 @@
                                     <i class="fa-solid {% if product.stock > 10 %}fa-circle-check{% else %}fa-triangle-exclamation{% endif %}"></i> {{ product.stock }} in stock
                                 </span>
                             </div>
-                            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
-                                <a href="/customer/product/{{ product.id }}" class="btn btn-primary" style="flex: 1; padding: 0.55rem 0.65rem; font-size: 0.82rem; border-radius: var(--radius-sm); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
-                                    <i class="fa-solid fa-cart-shopping"></i> View Details
+                            
+                            <!-- Action buttons: View Details | Ask AI | Add to Cart -->
+                            <div class="product-card-actions">
+                                <a href="/customer/product/{{ product.id }}" class="card-action-btn btn-view-details" title="View product details">
+                                    <i class="fa-solid fa-circle-info"></i> View Details
                                 </a>
-                                <button class="ask-ai-item-btn" style="flex: 1; margin-top: 0;" onclick="askAboutProduct('Tell me about {{ product.name }} and why I should buy it')">
+                                <button type="button" class="card-action-btn btn-ask-ai" onclick="askAboutProduct('Tell me about {{ product.name|replace("'", "\\'") }} and why I should buy it')" title="Ask AI about this item">
                                     <i class="fa-solid fa-robot"></i> Ask AI
+                                </button>
+                                <button type="button" class="card-action-btn btn-add-cart" id="btn-cart-{{ product.id }}" onclick="addToCart({{ product.id }}, '{{ product.name|replace("'", "\\'") }}', {{ product.price }}, {{ product.stock }}, '{{ (product.image_url or '')|replace("'", "\\'") }}', '{{ (product.category or '')|replace("'", "\\'") }}', this)" {% if product.stock <= 0 %}disabled title="Out of stock"{% else %}title="Add to cart"{% endif %}>
+                                    <i class="fa-solid fa-cart-plus"></i> Add to Cart
                                 </button>
                             </div>
                         </div>
@@ -742,33 +1026,45 @@
                 </div>
             </section>
 
-            <!-- RIGHT COLUMN: AI Shopping Assistant (Grounded RAG) -->
-            <aside class="ai-assistant-card">
-                <div class="assistant-header">
-                    <div class="assistant-header-title">
-                        <span style="font-size: 1.3rem;">🤖</span>
-                        <h2>AI Shopping Assistant</h2>
+        </div>
+
+        <!-- TAB 2: AI SHOPPING ASSISTANT VIEW (Moved into left sidebar menu item) -->
+        <div id="ai-assistant-view" class="tab-content" style="display: none;">
+            <div class="ai-assistant-container">
+                
+                <!-- Assistant Hero Header -->
+                <div class="assistant-hero">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-white); display: flex; align-items: center; gap: 0.65rem; margin: 0;">
+                                <span>🤖</span> AI Shopping Assistant
+                            </h2>
+                            <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 0.35rem; margin-bottom: 0;">
+                                Grounded product recommendations powered by Google Gemini and live MySQL catalog context.
+                            </p>
+                        </div>
+                        <span class="rag-badge">
+                            <i class="fa-solid fa-shield-halved"></i> Grounded RAG
+                        </span>
                     </div>
-                    <span class="rag-badge">
-                        <i class="fa-solid fa-shield-halved"></i> Grounded RAG
-                    </span>
                 </div>
 
-                <div class="assistant-body">
+                <!-- Assistant Workspace Card -->
+                <div class="assistant-workspace-card">
                     <!-- Quick Prompt Suggestions -->
                     <div>
                         <div class="suggested-chips-label">Suggested Questions</div>
-                        <div class="suggested-chips">
-                            <button class="chip-btn" onclick="setAndAskAI('What is the best laptop for gaming?')">
+                        <div class="suggested-chips-grid">
+                            <button type="button" class="chip-btn" onclick="setAndAskAI('What is the best laptop for gaming?')">
                                 <i class="fa-solid fa-laptop" style="color: #818cf8;"></i> What is the best laptop for gaming?
                             </button>
-                            <button class="chip-btn" onclick="setAndAskAI('Show me wireless headphones under 200')">
+                            <button type="button" class="chip-btn" onclick="setAndAskAI('Show me wireless headphones under 200')">
                                 <i class="fa-solid fa-headphones" style="color: #34d399;"></i> Show me wireless headphones under 200
                             </button>
-                            <button class="chip-btn" onclick="setAndAskAI('What ergonomic office furniture is available?')">
+                            <button type="button" class="chip-btn" onclick="setAndAskAI('What ergonomic office furniture is available?')">
                                 <i class="fa-solid fa-chair" style="color: #fbbf24;"></i> Ergonomic office furniture
                             </button>
-                            <button class="chip-btn" onclick="setAndAskAI('Top recommended products in catalog')">
+                            <button type="button" class="chip-btn" onclick="setAndAskAI('Top recommended products in catalog')">
                                 <i class="fa-solid fa-star" style="color: #f472b6;"></i> Top recommended products
                             </button>
                         </div>
@@ -777,16 +1073,16 @@
                     <!-- Question Input -->
                     <div class="assistant-input-group">
                         <textarea id="customerAIQuestion" class="assistant-input" rows="2" placeholder="Ask any product question in English, Tamil, or Tanglish..."></textarea>
-                        <button id="customerAISubmit" class="send-ai-btn" onclick="submitCustomerAIQuery()" title="Send question">
+                        <button id="customerAISubmit" type="button" class="send-ai-btn" onclick="submitCustomerAIQuery()" title="Send question">
                             <i class="fa-solid fa-paper-plane"></i>
                         </button>
                     </div>
 
                     <!-- Loading Indicator -->
                     <div id="customerAILoading" class="ai-loading-box">
-                        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 1.8rem; color: #6366f1; margin-bottom: 0.75rem;"></i>
-                        <p style="color: var(--text-white); font-weight: 600; font-size: 0.88rem; margin: 0;">Retrieving Catalog & Grounding AI...</p>
-                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Checking MySQL catalog for matching items.</p>
+                        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: #6366f1; margin-bottom: 0.75rem;"></i>
+                        <p style="color: var(--text-white); font-weight: 600; font-size: 0.95rem; margin: 0;">Retrieving Catalog & Grounding AI...</p>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem; margin-bottom: 0;">Checking MySQL catalog for matching items and formulating grounded recommendation.</p>
                     </div>
 
                     <!-- AI Response Area -->
@@ -799,24 +1095,89 @@
                         <!-- Matched Products from Catalog -->
                         <div id="customerAIMatchedProducts" class="matched-prods-container" style="display: none;">
                             <div class="matched-title">Matched Catalog Products</div>
-                            <div id="matchedProductsList" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                            <div id="matchedProductsList" style="display: flex; flex-direction: column; gap: 0.65rem;"></div>
                         </div>
                     </div>
-
                 </div>
-            </aside>
 
+            </div>
         </div>
 
     </main>
 
 </div>
+
+<!-- Cart Drawer & Overlay -->
+<div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer()"></div>
+<aside id="cartDrawer" class="cart-drawer">
+    <div class="cart-drawer-header">
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <i class="fa-solid fa-cart-shopping" style="color: var(--primary-color); font-size: 1.15rem;"></i>
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--text-white);">Your Shopping Cart</h3>
+        </div>
+        <button type="button" class="cart-close-btn" onclick="toggleCartDrawer()" title="Close Cart">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <div id="cartDrawerBody" class="cart-drawer-body">
+        <!-- Rendered dynamically -->
+    </div>
+
+    <div class="cart-drawer-footer">
+        <div class="cart-total-row">
+            <span style="color: var(--text-muted); font-size: 0.95rem; font-weight: 500;">Total Amount:</span>
+            <span id="cartDrawerTotal" style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color);">$0.00</span>
+        </div>
+        <div style="display: flex; gap: 0.6rem; margin-top: 0.5rem;">
+            <button type="button" class="btn btn-outline" style="flex: 1; padding: 0.65rem 0.5rem; font-size: 0.85rem;" onclick="clearCart()">
+                <i class="fa-solid fa-trash-can"></i> Clear Cart
+            </button>
+            <button type="button" class="btn btn-primary" style="flex: 2; padding: 0.65rem 0.5rem; font-size: 0.85rem;" onclick="checkoutFirstItem()">
+                <i class="fa-solid fa-bag-shopping"></i> Proceed to Order
+            </button>
+        </div>
+    </div>
+</aside>
+
+<!-- Floating Toast Container -->
+<div id="toastContainer" class="toast-container"></div>
 {% endblock %}
 
 {% block scripts %}
 <script>
     let activeCategory = 'all';
 
+    // -------------------------------------------------------------
+    // Sidebar Tab Switching
+    // -------------------------------------------------------------
+    function switchCustomerTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => item.classList.remove('active'));
+
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) targetTab.style.display = 'block';
+
+        const activeNav = document.querySelector(`.sidebar-nav .nav-item[data-tab="${tabId}"]`);
+        if (activeNav) activeNav.classList.add('active');
+
+        // Update topbar title
+        const titleEl = document.getElementById('currentViewTitle');
+        if (titleEl) {
+            titleEl.innerText = (tabId === 'ai-assistant-view') ? 'AI Shopping Assistant' : 'Customer Dashboard';
+        }
+
+        // Update URL hash without reload
+        if (tabId === 'ai-assistant-view') {
+            window.location.hash = '#ai-assistant';
+        } else {
+            window.location.hash = '#dashboard';
+        }
+    }
+
+    // -------------------------------------------------------------
+    // Catalog Category & Text Filtering
+    // -------------------------------------------------------------
     function selectCategory(cat, btn) {
         activeCategory = cat;
         document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
@@ -849,18 +1210,248 @@
         if (countEl) countEl.innerText = visibleCount;
     }
 
+    // -------------------------------------------------------------
+    // Cart Management (LocalStorage-based with Quantity Updates)
+    // -------------------------------------------------------------
+    function getCart() {
+        try {
+            const stored = localStorage.getItem('shopsense_cart');
+            return stored ? JSON.parse(stored) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveCart(cart) {
+        try {
+            localStorage.setItem('shopsense_cart', JSON.stringify(cart));
+        } catch (e) {
+            console.error("Cart save failed", e);
+        }
+        updateCartBadge();
+        renderCartDrawer();
+    }
+
+    function updateCartBadge() {
+        const cart = getCart();
+        const totalQty = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+        const badge = document.getElementById('cartCountBadge');
+        if (badge) {
+            badge.innerText = totalQty;
+            badge.style.display = totalQty > 0 ? 'inline-flex' : 'none';
+        }
+    }
+
+    function addToCart(productId, name, price, stock, imageUrl, category, btnElement) {
+        stock = parseInt(stock) || 0;
+        if (stock <= 0) {
+            showToast(`"${name}" is currently out of stock.`, "warning");
+            return;
+        }
+
+        let cart = getCart();
+        const existingIndex = cart.findIndex(item => item.id === productId);
+
+        if (existingIndex > -1) {
+            // Update quantity instead of creating unwanted duplicate
+            if (cart[existingIndex].quantity < stock) {
+                cart[existingIndex].quantity += 1;
+                saveCart(cart);
+                showToast(`Added to cart (${cart[existingIndex].quantity} in cart)`, "success");
+            } else {
+                showToast(`Maximum stock limit reached for "${name}" (${stock} units).`, "warning");
+                return;
+            }
+        } else {
+            // Add new item to cart
+            cart.push({
+                id: productId,
+                name: name,
+                price: parseFloat(price),
+                stock: stock,
+                image_url: imageUrl || '',
+                category: category || '',
+                quantity: 1
+            });
+            saveCart(cart);
+            showToast("Added to cart", "success");
+        }
+
+        // Inline button feedback animation
+        if (btnElement) {
+            const originalHTML = btnElement.innerHTML;
+            btnElement.innerHTML = `<i class="fa-solid fa-check"></i> Added!`;
+            btnElement.classList.add('btn-added-flash');
+            setTimeout(() => {
+                btnElement.innerHTML = originalHTML;
+                btnElement.classList.remove('btn-added-flash');
+            }, 1200);
+        }
+    }
+
+    function updateCartItemQty(productId, delta) {
+        let cart = getCart();
+        const idx = cart.findIndex(item => item.id === productId);
+        if (idx === -1) return;
+
+        const newQty = (cart[idx].quantity || 1) + delta;
+        if (newQty <= 0) {
+            cart.splice(idx, 1);
+            showToast("Item removed from cart", "warning");
+        } else if (newQty > cart[idx].stock) {
+            showToast(`Cannot exceed available stock of ${cart[idx].stock} units.`, "warning");
+            return;
+        } else {
+            cart[idx].quantity = newQty;
+        }
+        saveCart(cart);
+    }
+
+    function removeCartItem(productId) {
+        let cart = getCart();
+        cart = cart.filter(item => item.id !== productId);
+        saveCart(cart);
+        showToast("Item removed from cart", "warning");
+    }
+
+    function clearCart() {
+        saveCart([]);
+        showToast("Cart cleared", "warning");
+    }
+
+    function toggleCartDrawer() {
+        const drawer = document.getElementById('cartDrawer');
+        const overlay = document.getElementById('cartDrawerOverlay');
+        const isActive = drawer.classList.contains('active');
+
+        if (isActive) {
+            drawer.classList.remove('active');
+            overlay.classList.remove('active');
+        } else {
+            renderCartDrawer();
+            drawer.classList.add('active');
+            overlay.classList.add('active');
+        }
+    }
+
+    function renderCartDrawer() {
+        const body = document.getElementById('cartDrawerBody');
+        const totalEl = document.getElementById('cartDrawerTotal');
+        const cart = getCart();
+
+        if (cart.length === 0) {
+            body.innerHTML = `
+                <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-cart-arrow-down" style="font-size: 2.75rem; color: #3f3f46; margin-bottom: 1rem;"></i>
+                    <p style="font-size: 1rem; font-weight: 600; color: var(--text-white); margin-bottom: 0.35rem;">Your cart is empty</p>
+                    <p style="font-size: 0.85rem;">Browse products in the catalog and click "Add to Cart" to start shopping.</p>
+                </div>
+            `;
+            if (totalEl) totalEl.innerText = "$0.00";
+            return;
+        }
+
+        let total = 0;
+        let html = '';
+
+        cart.forEach(item => {
+            const itemTotal = (item.price * item.quantity);
+            total += itemTotal;
+            const imgHtml = item.image_url 
+                ? `<img src="${item.image_url}" class="cart-item-img" alt="${item.name}">` 
+                : `<div class="cart-item-img" style="display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-box" style="color:#71717a"></i></div>`;
+
+            html += `
+                <div class="cart-item-card">
+                    ${imgHtml}
+                    <div class="cart-item-info">
+                        <div class="cart-item-title" title="${item.name}">${item.name}</div>
+                        <div class="cart-item-price">$${item.price.toFixed(2)} × ${item.quantity} = $${itemTotal.toFixed(2)}</div>
+                        <div class="cart-stepper">
+                            <button type="button" class="cart-stepper-btn" onclick="updateCartItemQty(${item.id}, -1)">
+                                <i class="fa-solid fa-minus"></i>
+                            </button>
+                            <span class="cart-stepper-qty">${item.quantity}</span>
+                            <button type="button" class="cart-stepper-btn" onclick="updateCartItemQty(${item.id}, 1)" ${item.quantity >= item.stock ? 'disabled' : ''}>
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                            <a href="/customer/product/${item.id}" style="margin-left: 0.5rem; font-size: 0.75rem; color: #818cf8; text-decoration: none;">
+                                View <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <button type="button" class="cart-item-remove-btn" onclick="removeCartItem(${item.id})" title="Remove item">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            `;
+        });
+
+        body.innerHTML = html;
+        if (totalEl) totalEl.innerText = `$${total.toFixed(2)}`;
+    }
+
+    function checkoutFirstItem() {
+        const cart = getCart();
+        if (cart.length === 0) {
+            showToast("Your cart is empty. Add items first!", "warning");
+            return;
+        }
+        // Redirect to the first item's detail page for order placement
+        window.location.href = `/customer/product/${cart[0].id}`;
+    }
+
+    // -------------------------------------------------------------
+    // Toast Notification System
+    // -------------------------------------------------------------
+    function showToast(message, type = "success") {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast-item toast-${type}`;
+        const icon = (type === 'success') ? 'fa-circle-check' : (type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info');
+        toast.innerHTML = `
+            <i class="fa-solid ${icon}"></i>
+            <span>${message}</span>
+        `;
+        container.appendChild(toast);
+
+        // Slide in
+        setTimeout(() => toast.classList.add('toast-show'), 10);
+
+        // Auto dismiss after 2.5s
+        setTimeout(() => {
+            toast.classList.remove('toast-show');
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+
+    // -------------------------------------------------------------
+    // AI Shopping Assistant & Grounded RAG (100% Reused)
+    // -------------------------------------------------------------
     function askAboutProduct(question) {
+        // Switch to AI Shopping Assistant tab in left sidebar
+        switchCustomerTab('ai-assistant-view');
+        
         const input = document.getElementById('customerAIQuestion');
-        input.value = question;
-        submitCustomerAIQuery();
-        // Scroll smoothly to assistant on mobile/smaller screens
-        document.querySelector('.ai-assistant-card').scrollIntoView({ behavior: 'smooth' });
+        if (input) {
+            input.value = question;
+            submitCustomerAIQuery();
+        }
     }
 
     function setAndAskAI(question) {
         const input = document.getElementById('customerAIQuestion');
-        input.value = question;
-        submitCustomerAIQuery();
+        if (input) {
+            input.value = question;
+            submitCustomerAIQuery();
+        }
     }
 
     async function submitCustomerAIQuery() {
@@ -903,23 +1494,24 @@
                 data.matched_products.forEach(prod => {
                     const item = document.createElement('div');
                     item.className = 'matched-mini-card';
-                    item.title = `Click to view ${prod.name} details & place order`;
-                    item.onclick = () => {
-                        window.location.href = `/customer/product/${prod.id}`;
-                    };
                     const imgUrl = prod.image_url || '';
                     item.innerHTML = `
                         ${imgUrl ? `<img src="${imgUrl}" class="matched-mini-img" alt="${prod.name}" onerror="this.style.display='none'">` : '<div class="matched-mini-img" style="display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-box" style="color:#71717a"></i></div>'}
                         <div class="matched-mini-info">
                             <div class="matched-mini-name">${prod.name}</div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.35rem; flex-wrap: wrap; gap: 0.5rem;">
                                 <div>
                                     <span class="matched-mini-price">$${parseFloat(prod.price).toFixed(2)}</span>
-                                    <span class="matched-mini-stock">• ${prod.stock} in stock</span>
+                                    <span style="font-size: 0.72rem; color: var(--text-muted); margin-left: 0.4rem;">• ${prod.stock} in stock</span>
                                 </div>
-                                <span style="font-size: 0.75rem; color: #818cf8; font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem;">
-                                    View & Order <i class="fa-solid fa-arrow-right"></i>
-                                </span>
+                                <div style="display: flex; gap: 0.4rem;">
+                                    <a href="/customer/product/${prod.id}" class="card-action-btn btn-view-details" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">
+                                        View Details
+                                    </a>
+                                    <button type="button" class="card-action-btn btn-add-cart" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;" onclick="addToCart(${prod.id}, '${prod.name.replace(/'/g, "\\'")}', ${prod.price}, ${prod.stock}, '${(prod.image_url || '').replace(/'/g, "\\'")}', '${(prod.category || '').replace(/'/g, "\\'")}', this)" ${prod.stock <= 0 ? 'disabled' : ''}>
+                                        <i class="fa-solid fa-cart-plus"></i> Add
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -935,11 +1527,24 @@
         }
     }
 
-    // Allow Enter key to submit query
-    document.getElementById('customerAIQuestion').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            submitCustomerAIQuery();
+    // Initialize page on load
+    document.addEventListener("DOMContentLoaded", () => {
+        updateCartBadge();
+
+        // Listen for Enter key on AI query textarea
+        const aiInput = document.getElementById('customerAIQuestion');
+        if (aiInput) {
+            aiInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    submitCustomerAIQuery();
+                }
+            });
+        }
+
+        // Check URL hash for initial tab state
+        if (window.location.hash === '#ai-assistant') {
+            switchCustomerTab('ai-assistant-view');
         }
     });
 </script>

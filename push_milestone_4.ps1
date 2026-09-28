@@ -22,8 +22,14 @@ git rm --cached .env 2>$null
 git rm --cached shopsense.db 2>$null
 git rm --cached render.yaml 2>$null
 git rm --cached render_deploy_guide.md 2>$null
+git rm --cached vercel.json 2>$null
+git rm --cached vercel_deploy_guide.md 2>$null
+git rm -r --cached api/ 2>$null
 if (Test-Path "render.yaml") { Remove-Item "render.yaml" -Force -ErrorAction SilentlyContinue }
 if (Test-Path "render_deploy_guide.md") { Remove-Item "render_deploy_guide.md" -Force -ErrorAction SilentlyContinue }
+if (Test-Path "vercel.json") { Remove-Item "vercel.json" -Force -ErrorAction SilentlyContinue }
+if (Test-Path "vercel_deploy_guide.md") { Remove-Item "vercel_deploy_guide.md" -Force -ErrorAction SilentlyContinue }
+if (Test-Path "api") { Remove-Item "api" -Recurse -Force -ErrorAction SilentlyContinue }
 
 # 3. Stage required Milestone 4 files
 Write-Host "[2/6] Staging Milestone 4 project files..." -ForegroundColor Yellow
